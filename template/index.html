@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{PARTNER_NAME}} — Business Funding</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --color-primary: {{COLOR_PRIMARY}};
+      --color-secondary: {{COLOR_SECONDARY}};
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <img src="{{LOGO_PATH}}" alt="{{PARTNER_NAME}}" class="logo">
+    <h1>Get the funding your business needs</h1>
+    <p class="tagline">Powered by {{PARTNER_NAME}}</p>
+  </header>
+  <main>
+    <iframe
+      src="{{WIDGET_URL}}"
+      title="Funding application"
+      class="widget"
+      loading="lazy">
+    </iframe>
+  </main>
+  <footer>
+    <p>© {{PARTNER_NAME}} · All rights reserved</p>
+  </footer>
+</body>
+</html>
