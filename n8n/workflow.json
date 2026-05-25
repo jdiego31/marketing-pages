@@ -1,0 +1,410 @@
+{
+  "name": "Partner Funding Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "partner-funding",
+        "responseMode": "lastNode",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "a1111111-0000-0000-0000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "partner-funding-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// === Validate input + apply UTMs + generate slug ===\n// See n8n/lib/validate.js for the authoritative version.\n\nconst payload = $input.first().json.body || $input.first().json;\n\nconst REQUIRED = ['mode', 'partner_name', 'color_primary', 'color_secondary', 'widget_url'];\nconst missing = REQUIRED.filter((f) => !payload[f]);\nif (missing.length) throw new Error(`Missing required fields: ${missing.join(', ')}`);\n\nconst { mode, partner_name, color_primary, color_secondary, widget_url } = payload;\n\nif (!['create', 'update'].includes(mode)) throw new Error(`Invalid mode '${mode}'.`);\n\nconst HEX = /^#[0-9A-F]{6}$/i;\nif (!HEX.test(color_primary)) throw new Error(`Invalid color_primary '${color_primary}'.`);\nif (!HEX.test(color_secondary)) throw new Error(`Invalid color_secondary '${color_secondary}'.`);\n\nfunction toSlug(s) {\n  return s.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');\n}\n\nlet slug;\nif (mode === 'create') {\n  slug = toSlug(partner_name);\n  if (!slug) throw new Error(`Cannot derive slug from '${partner_name}'.`);\n} else {\n  if (!payload.slug) throw new Error(\"'update' mode requires slug.\");\n  slug = payload.slug;\n  if (!/^[a-z0-9-]+$/.test(slug)) throw new Error(`Invalid slug '${slug}'.`);\n}\n\nconst RESERVED = ['template', '_assets', 'n8n', 'example'];\nif (mode === 'create' && RESERVED.includes(slug)) throw new Error(`Slug '${slug}' is reserved.`);\n\nlet widgetUrl;\ntry { widgetUrl = new URL(widget_url); } catch (e) { throw new Error(`Invalid widget_url.`); }\n['utm_source', 'utm_medium', 'utm_campaign'].forEach((k) => {\n  if (payload[k] && String(payload[k]).trim()) widgetUrl.searchParams.set(k, String(payload[k]).trim());\n});\nconst widget_url_final = widgetUrl.toString();\n\nfunction extFromUrl(url, fallback) {\n  if (!url) return fallback;\n  try {\n    const m = new URL(url).pathname.match(/\\.([a-z0-9]+)$/i);\n    return m ? m[1].toLowerCase() : fallback;\n  } catch (e) { return fallback; }\n}\n\nconst has_logo = !!payload.logo_file_url;\nconst has_hero = !!payload.hero_file_url;\nconst logo_ext = has_logo ? extFromUrl(payload.logo_file_url, 'png') : null;\nconst hero_ext = has_hero ? extFromUrl(payload.hero_file_url, 'jpg') : null;\n\nreturn [{\n  json: {\n    slug, mode, partner_name, color_primary, color_secondary,\n    widget_url: widget_url_final,\n    has_logo, has_hero,\n    logo_file_url: payload.logo_file_url || null,\n    hero_file_url: payload.hero_file_url || null,\n    logo_ext, hero_ext,\n    logo_path: has_logo ? `./logo.${logo_ext}` : '',\n    hero_image_path: has_hero ? `./hero.${hero_ext}` : '/_assets/hero-default.jpg',\n    embed_widget: !!payload.embed_widget,\n    cobrand: !!payload.cobrand,\n    cta_href: payload.embed_widget ? '#apply' : widget_url_final,\n    requester_slack_id: payload.requester_slack_id || null,\n  }\n}];"
+      },
+      "id": "a1111111-0000-0000-0000-000000000002",
+      "name": "Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.github.com/repos/jdiego31/marketing-pages/contents/{{ $json.slug }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/vnd.github+json" },
+            { "name": "X-GitHub-Api-Version", "value": "2022-11-28" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "a1111111-0000-0000-0000-000000000003",
+      "name": "Check Slug Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300],
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_GITHUB_PAT_ID", "name": "github_pat" }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "strict" },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "create-not-exists",
+              "leftValue": "={{ $('Validate').first().json.mode === 'create' && $json.statusCode === 404 }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            },
+            {
+              "id": "update-exists",
+              "leftValue": "={{ $('Validate').first().json.mode === 'update' && $json.statusCode === 200 }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ]
+        }
+      },
+      "id": "a1111111-0000-0000-0000-000000000004",
+      "name": "Mode OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/jdiego31/marketing-pages/contents/template/index.html",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/vnd.github+json" },
+            { "name": "X-GitHub-Api-Version", "value": "2022-11-28" }
+          ]
+        }
+      },
+      "id": "a1111111-0000-0000-0000-000000000005",
+      "name": "Read Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 200],
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_GITHUB_PAT_ID", "name": "github_pat" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/jdiego31/marketing-pages/contents/template/styles.css",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/vnd.github+json" },
+            { "name": "X-GitHub-Api-Version", "value": "2022-11-28" }
+          ]
+        }
+      },
+      "id": "a1111111-0000-0000-0000-000000000006",
+      "name": "Read Template CSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 400],
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_GITHUB_PAT_ID", "name": "github_pat" }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// === Process template: placeholder replace + IF blocks ===\n// See n8n/lib/process.js for authoritative version.\n\nconst data = $('Validate').first().json;\nconst templateB64 = $('Read Template').first().json.content;\nlet html = Buffer.from(templateB64, 'base64').toString('utf-8');\n\nconst replacements = {\n  PARTNER_NAME: data.partner_name,\n  LOGO_PATH: data.logo_path || '',\n  COLOR_PRIMARY: data.color_primary,\n  COLOR_SECONDARY: data.color_secondary,\n  WIDGET_URL: data.widget_url,\n  HERO_IMAGE_PATH: data.hero_image_path,\n  CTA_HREF: data.cta_href,\n};\n\nfor (const [k, v] of Object.entries(replacements)) {\n  html = html.split(`{{${k}}}`).join(v);\n}\n\nfunction processIf(html, flag, keep) {\n  const s = `<!--IF:${flag}-->`;\n  const e = `<!--/IF:${flag}-->`;\n  if (keep) return html.split(s).join('').split(e).join('');\n  const re = new RegExp(`<!--IF:${flag}-->[\\\\s\\\\S]*?<!--/IF:${flag}-->`, 'g');\n  return html.replace(re, '');\n}\n\nconst flags = {\n  logo: data.has_logo,\n  nologo: !data.has_logo,\n  embed: data.embed_widget,\n  loader: !data.embed_widget,\n  cobrand: data.cobrand,\n};\nfor (const [flag, keep] of Object.entries(flags)) {\n  html = processIf(html, flag, keep);\n}\n\nreturn [{ json: { ...data, processed_html: html } }];"
+      },
+      "id": "a1111111-0000-0000-0000-000000000007",
+      "name": "Process Template",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/jdiego31/marketing-pages/contents/{{ $json.slug }}/index.html",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/vnd.github+json" },
+            { "name": "X-GitHub-Api-Version", "value": "2022-11-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ message: ($json.mode === 'create' ? 'Add' : 'Update') + ' partner: ' + $json.slug, content: Buffer.from($json.processed_html, 'utf-8').toString('base64') }) }}"
+      },
+      "id": "a1111111-0000-0000-0000-000000000008",
+      "name": "PUT index.html",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 200],
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_GITHUB_PAT_ID", "name": "github_pat" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/jdiego31/marketing-pages/contents/{{ $('Validate').first().json.slug }}/styles.css",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/vnd.github+json" },
+            { "name": "X-GitHub-Api-Version", "value": "2022-11-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ message: 'Add styles for partner: ' + $('Validate').first().json.slug, content: $('Read Template CSS').first().json.content.replace(/\\n/g, '') }) }}"
+      },
+      "id": "a1111111-0000-0000-0000-000000000009",
+      "name": "PUT styles.css",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 400],
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_GITHUB_PAT_ID", "name": "github_pat" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/jdiego31/marketing-pages/zipball/main",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/vnd.github+json" },
+            { "name": "X-GitHub-Api-Version", "value": "2022-11-28" }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "repo_zip"
+            }
+          },
+          "redirect": { "redirect": { "followRedirects": true } }
+        }
+      },
+      "id": "a1111111-0000-0000-0000-00000000000A",
+      "name": "Get Zipball",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1920, 300],
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_GITHUB_PAT_ID", "name": "github_pat" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "decompress",
+        "binaryPropertyName": "repo_zip",
+        "outputFormat": "zip"
+      },
+      "id": "a1111111-0000-0000-0000-00000000000B",
+      "name": "Decompress",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.2,
+      "position": [2160, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// === Build Vercel deploy payload from extracted zipball ===\n// See n8n/lib/build-deploy.js for authoritative version.\n\nconst items = $input.all();\nconst EXCLUDE = [\n  /^template\\//,\n  /^PLAN\\.md$/,\n  /^\\.git\\//,\n  /^\\.vercel\\//,\n  /^\\.vercelignore$/,\n  /^\\.gitignore$/,\n  /^n8n\\//,\n  /\\/\\.DS_Store$/,\n  /^\\.DS_Store$/,\n];\n\nconst files = [];\nfor (const item of items) {\n  const fileName = item.json.fileName || item.json.name || item.binary?.data?.fileName;\n  if (!fileName) continue;\n  const stripped = fileName.replace(/^[^/]+\\//, '');\n  if (!stripped || stripped.endsWith('/')) continue;\n  if (EXCLUDE.some((re) => re.test(stripped))) continue;\n  const data = item.binary?.data?.data;\n  if (!data) continue;\n  files.push({ file: stripped, data, encoding: 'base64' });\n}\n\nif (files.length === 0) throw new Error('No files to deploy.');\n\nreturn [{ json: { files, file_count: files.length, slug: $('Validate').first().json.slug, partner_name: $('Validate').first().json.partner_name, requester_slack_id: $('Validate').first().json.requester_slack_id } }];"
+      },
+      "id": "a1111111-0000-0000-0000-00000000000C",
+      "name": "Build Deploy Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2400, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vercel.com/v13/deployments?teamId=team_HqA3bL7kkzPosLZDmtUYohZS",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ name: 'partnerfunding', project: 'prj_KFGLlB9oaQgyXV6oRAUjWeAkdqmt', target: 'production', files: $json.files, projectSettings: { framework: null } }) }}"
+      },
+      "id": "a1111111-0000-0000-0000-00000000000D",
+      "name": "Deploy to Vercel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2640, 300],
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_VERCEL_TOKEN_ID", "name": "vercel_token" }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15,
+        "unit": "seconds"
+      },
+      "id": "a1111111-0000-0000-0000-00000000000E",
+      "name": "Wait 15s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2880, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://partnerfunding.vercel.app/{{ $('Build Deploy Payload').first().json.slug }}/",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "a1111111-0000-0000-0000-00000000000F",
+      "name": "Health Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3120, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "user",
+        "user": { "__rl": true, "value": "={{ $('Build Deploy Payload').first().json.requester_slack_id }}", "mode": "id" },
+        "messageType": "text",
+        "text": "=✅ Tu landing para *{{ $('Build Deploy Payload').first().json.partner_name }}* está lista:\nhttps://partnerfunding.vercel.app/{{ $('Build Deploy Payload').first().json.slug }}/"
+      },
+      "id": "a1111111-0000-0000-0000-000000000010",
+      "name": "Slack Success",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [3360, 300],
+      "credentials": {
+        "slackOAuth2Api": { "id": "REPLACE_WITH_SLACK_OAUTH_ID", "name": "slack_oauth" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "user",
+        "user": { "__rl": true, "value": "={{ $('Validate').first().json.requester_slack_id }}", "mode": "id" },
+        "messageType": "text",
+        "text": "=❌ No pude crear/actualizar el partner *{{ $('Validate').first().json.partner_name }}* (slug `{{ $('Validate').first().json.slug }}`).\n\nSi `mode=create`: el slug ya existe — usá `update` o cambiá el partner_name.\nSi `mode=update`: el slug no existe — usá `create` primero."
+      },
+      "id": "a1111111-0000-0000-0000-000000000011",
+      "name": "Slack Error",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [1200, 600],
+      "credentials": {
+        "slackOAuth2Api": { "id": "REPLACE_WITH_SLACK_OAUTH_ID", "name": "slack_oauth" }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Validate", "type": "main", "index": 0 }]]
+    },
+    "Validate": {
+      "main": [[{ "node": "Check Slug Exists", "type": "main", "index": 0 }]]
+    },
+    "Check Slug Exists": {
+      "main": [[{ "node": "Mode OK?", "type": "main", "index": 0 }]]
+    },
+    "Mode OK?": {
+      "main": [
+        [
+          { "node": "Read Template", "type": "main", "index": 0 },
+          { "node": "Read Template CSS", "type": "main", "index": 0 }
+        ],
+        [{ "node": "Slack Error", "type": "main", "index": 0 }]
+      ]
+    },
+    "Read Template": {
+      "main": [[{ "node": "Process Template", "type": "main", "index": 0 }]]
+    },
+    "Read Template CSS": {
+      "main": [[{ "node": "Process Template", "type": "main", "index": 0 }]]
+    },
+    "Process Template": {
+      "main": [[{ "node": "PUT index.html", "type": "main", "index": 0 }]]
+    },
+    "PUT index.html": {
+      "main": [[{ "node": "PUT styles.css", "type": "main", "index": 0 }]]
+    },
+    "PUT styles.css": {
+      "main": [[{ "node": "Get Zipball", "type": "main", "index": 0 }]]
+    },
+    "Get Zipball": {
+      "main": [[{ "node": "Decompress", "type": "main", "index": 0 }]]
+    },
+    "Decompress": {
+      "main": [[{ "node": "Build Deploy Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Deploy Payload": {
+      "main": [[{ "node": "Deploy to Vercel", "type": "main", "index": 0 }]]
+    },
+    "Deploy to Vercel": {
+      "main": [[{ "node": "Wait 15s", "type": "main", "index": 0 }]]
+    },
+    "Wait 15s": {
+      "main": [[{ "node": "Health Check", "type": "main", "index": 0 }]]
+    },
+    "Health Check": {
+      "main": [[{ "node": "Slack Success", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1.0.0",
+  "tags": []
+}
