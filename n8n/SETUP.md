@@ -124,6 +124,15 @@ El Slack Workflow form **no expone directamente file URLs** — necesita un prim
 
 Hasta que tengás Slack OAuth configurado, podés probar el workflow completo usando el HTML form local:
 
+0. **(One-time) Asegurar que main está deployado en Vercel:**
+   El workflow va a hacer su propio deploy, pero conviene tener una baseline conocida antes de empezar — así si algo falla, sabés que la base estaba bien.
+   ```bash
+   source ~/.nvm/nvm.sh && nvm use 22
+   cd /Users/juanhincapie/Documents/landing-page-generator
+   vercel --prod --yes
+   ```
+   Verificá que `https://partnerfunding.vercel.app/example/` carga con estilos antes de seguir.
+
 1. **Setup mínimo en n8n:**
    - Crear credentials `github_pat` y `vercel_token` (Slack no hace falta — los nodes de Slack vienen pre-desactivados en `workflow.json`)
    - Import `workflow.json`
@@ -151,6 +160,26 @@ Hasta que tengás Slack OAuth configurado, podés probar el workflow completo us
 6. **Verificar manualmente:**
    - GitHub: `https://github.com/jdiego31/marketing-pages` muestra el commit nuevo
    - Vercel: `https://partnerfunding.vercel.app/<slug>/` carga el partner
+
+## Cuándo hacer deploy manual a Vercel
+
+El workflow de n8n hace deploy en cada request a Vercel via API (incluye el estado completo del repo desde el zipball de GitHub). **No necesitás deploy manual para crear/editar partners.**
+
+Pero sí necesitás `vercel --prod` manual cuando:
+
+| Cambio | Por qué |
+|---|---|
+| Editás `template/index.html` o `template/styles.css` | n8n no va a regenerar las landings de partners existentes — solo aplica al próximo partner que se cree. Para que los partners viejos hereden los cambios, hay que redeploar a Vercel (que les copia los archivos del repo) Y/O re-correr el workflow en modo `update` por cada uno. |
+| Cambiás `_assets/hero-default.jpg` | Mismo razonamiento — el archivo solo se reemplaza en deploys completos. |
+| Modificás `vercel.json` o `.vercelignore` | Config a nivel proyecto — solo se aplica en deploys vía CLI o API. |
+| Querés ver el último commit de main live sin gatillar el workflow | Por ejemplo después de hacer fixes manuales al repo. |
+
+Comando (con nvm Node 22 activo):
+```bash
+source ~/.nvm/nvm.sh && nvm use 22 && vercel --prod --yes
+```
+
+Tarda ~2-5s. El deploy reasigna automáticamente los aliases `partnerfunding.vercel.app` (etc.) al nuevo deployment.
 
 ### Cuando llegue Slack (mañana)
 
