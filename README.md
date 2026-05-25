@@ -4,7 +4,7 @@ Landing pages personalizadas por partner para Lendflow. Cada partner recibe una 
 
 - **Hosting:** Vercel (cuenta `jdiego31`, proyecto en el scope `lendflow`)
 - **Repo:** [`jdiego31/marketing-pages`](https://github.com/jdiego31/marketing-pages)
-- **URL pattern:** `<project>.vercel.app/<slug>`
+- **URL pattern:** `partnerfunding.vercel.app/<slug>` (proyecto Vercel: `partnerfunding`, scope `lendflow`)
 
 Auto-deploy: cada push a `main` dispara un deploy en Vercel (~30–60 s).
 
@@ -26,7 +26,7 @@ marketing-pages/
 └── .vercelignore         # excluye template/ y PLAN.md
 ```
 
-Los partners viven en la raíz (no bajo `partners/`) para que `cleanUrls` baste y no haga falta configurar rewrites en `vercel.json`. Ejemplo: la carpeta `example/` se sirve en `<project>.vercel.app/example`.
+Los partners viven en la raíz (no bajo `partners/`) para que `cleanUrls` baste y no haga falta configurar rewrites en `vercel.json`. Ejemplo: la carpeta `example/` se sirve en `partnerfunding.vercel.app/example`.
 
 ## Placeholders del template
 
@@ -86,7 +86,7 @@ Los CTAs son `<a>` normales sin `target="_blank"`: el script `lendflow-loader.js
 5. Agregar el archivo del logo en la misma carpeta (mismo nombre que `{{LOGO_PATH}}`).
 6. Definir `{{HERO_IMAGE_PATH}}`: si el partner tiene foto propia, subila a la misma carpeta y usá `./hero.<ext>`. Si no, usá `/_assets/hero-default.jpg`.
 7. Commit + push a `main`. Vercel despliega solo.
-8. Verificar en `<project>.vercel.app/<slug>`.
+8. Verificar en `partnerfunding.vercel.app/<slug>`.
 
 Mirá `example/` como referencia funcional (modo default: link, sin cobrand).
 
