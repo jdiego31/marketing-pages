@@ -37,16 +37,16 @@ El template usa estos placeholders, que se reemplazan al generar cada partner:
 | Placeholder | Qué es | Ejemplo |
 |---|---|---|
 | `{{PARTNER_NAME}}` | Nombre visible del partner | `Acme Co` |
-| `{{LOGO_PATH}}` | Ruta relativa al logo | `./logo.png` |
 | `{{COLOR_PRIMARY}}` | Color principal hex | `#1f4ed8` |
 | `{{COLOR_SECONDARY}}` | Color secundario hex | `#0ea5e9` |
-| `{{WIDGET_URL}}` | URL del widget de Lendflow | `https://iw.lendflow.com/?env=...` |
+| `{{WIDGET_URL}}` | URL del widget de Lendflow (con UTMs apendados si vienen) | `https://iw.lendflow.com/?env=...&utm_source=email` |
 
-**Opcional (con fallback al default global):**
+**Opcionales (con fallback):**
 
-| Placeholder | Qué es | Con `hero_image` upload | Sin upload (default) |
+| Placeholder | Qué es | Si se sube | Si no |
 |---|---|---|---|
-| `{{HERO_IMAGE_PATH}}` | Foto del hero (split 60/40 a la derecha) | `./hero.<ext>` (relativo al partner) | `/_assets/hero-default.jpg` |
+| `{{LOGO_PATH}}` | Ruta relativa al logo | `./logo.<ext>` + `<!--IF:logo-->` activo | bloque `<!--IF:nologo-->` activo → header muestra `{{PARTNER_NAME}}` como texto |
+| `{{HERO_IMAGE_PATH}}` | Foto del hero | `./hero.<ext>` (per-partner) | `/_assets/hero-default.jpg` (default global) |
 
 **Derivados por n8n a partir del flag `embed_widget`:**
 
@@ -58,24 +58,33 @@ Los CTAs son `<a>` normales sin `target="_blank"`: el script `lendflow-loader.js
 
 **Bloques condicionales** (n8n conserva el contenido o borra el bloque entero según el flag):
 
+- `<!--IF:logo-->...<!--/IF:logo-->` — `<img>` del logo. Activa si marketing subió logo.
+- `<!--IF:nologo-->...<!--/IF:nologo-->` — fallback `<span>` con el partner_name como texto. Activa si NO se subió logo.
 - `<!--IF:embed-->...<!--/IF:embed-->` — sección con iframe embebido. Activa cuando `embed_widget=true`.
 - `<!--IF:loader-->...<!--/IF:loader-->` — `<script src="https://iw.lendflow.com/js/lendflow-loader.js">`. Activa cuando `embed_widget=false` (es decir, en modo link).
 - `<!--IF:cobrand-->...<!--/IF:cobrand-->` — línea "Funding powered by Lendflow" en el footer. Activa cuando `cobrand=true`.
 
-`IF:embed` e `IF:loader` son mutuamente exclusivos — el flag `embed_widget` controla ambos en sentido opuesto.
+`IF:logo` e `IF:nologo` son mutuamente exclusivos. `IF:embed` e `IF:loader` también.
 
 ## Inputs del Slack form
 
-| Campo | Tipo | Default |
-|---|---|---|
-| `partner_name` | text | — |
-| `logo` | file | — |
-| `color_primary` | hex | — |
-| `color_secondary` | hex | — |
-| `widget_url` | url | — |
-| `hero_image` | file (optional) | `null` → usa `/_assets/hero-default.jpg` |
-| `embed_widget` | checkbox | `false` (CTA dispara el widget on-page vía `lendflow-loader.js`) |
-| `cobrand` | checkbox | `false` (sin línea "Funding powered by Lendflow") |
+| Campo | Tipo | Required | Default |
+|---|---|---|---|
+| `mode` | radio (create / update) | ✓ | `create` |
+| `partner_name` | text | ✓ | — |
+| `color_primary` | hex | ✓ | — |
+| `color_secondary` | hex | ✓ | — |
+| `widget_url` | url | ✓ | — |
+| `logo` | file | — | header muestra `partner_name` como texto |
+| `hero_image` | file | — | `/_assets/hero-default.jpg` |
+| `embed_widget` | checkbox | — | `false` (link mode via `lendflow-loader.js`) |
+| `cobrand` | checkbox | — | `false` (sin "Funding powered by Lendflow") |
+| `utm_source` | text | — | (no se appendea) |
+| `utm_medium` | text | — | (no se appendea) |
+| `utm_campaign` | text | — | (no se appendea) |
+| `slug` | text | only if `mode=update` | — |
+
+En `mode=update`, marketing especifica el slug del partner a editar; cualquier campo (incluso los required) puede cambiarse y reemplaza la versión anterior.
 
 ## Cómo agregar un partner (manual, hoy)
 
@@ -83,8 +92,8 @@ Los CTAs son `<a>` normales sin `target="_blank"`: el script `lendflow-loader.js
 2. En `index.html`, reemplazar los placeholders requeridos.
 3. Definir `{{CTA_HREF}}` según si querés link o embed (ver tabla arriba).
 4. Para cada bloque `<!--IF:flag-->...<!--/IF:flag-->`: si el flag aplica, borrá solo los marcadores; si no, borrá el bloque entero. Recordá que `IF:embed` e `IF:loader` van inversos.
-5. Agregar el archivo del logo en la misma carpeta (mismo nombre que `{{LOGO_PATH}}`).
-6. Definir `{{HERO_IMAGE_PATH}}`: si el partner tiene foto propia, subila a la misma carpeta y usá `./hero.<ext>`. Si no, usá `/_assets/hero-default.jpg`.
+5. Si tenés logo: subilo a la misma carpeta, definí `{{LOGO_PATH}}` como `./logo.<ext>` y dejá el bloque `IF:logo` activo (borrá los marcadores y el bloque `IF:nologo` entero). Si no tenés logo: borrá el bloque `IF:logo` entero y dejá activo `IF:nologo` (mostrará `{{PARTNER_NAME}}` como texto).
+6. Definí `{{HERO_IMAGE_PATH}}`: si el partner tiene foto propia, subila como `./hero.<ext>`. Si no, usá `/_assets/hero-default.jpg`.
 7. Commit + push a `main`. Vercel despliega solo.
 8. Verificar en `partnerfunding.vercel.app/<slug>`.
 
