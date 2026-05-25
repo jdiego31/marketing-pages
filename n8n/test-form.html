@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner Funding — Test Form</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1f4ed8;
+      --primary-hover: #1a3fb5;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e6e8ee;
+      --bg: #f6f8fb;
+      --error: #dc2626;
+      --success: #16a34a;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.5;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0 0 2rem;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+    .card h2 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin: 0 0 1.25rem;
+    }
+    .field {
+      margin-bottom: 1rem;
+    }
+    .field:last-child { margin-bottom: 0; }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    label .req { color: var(--error); margin-left: 0.2rem; }
+    label .opt {
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 0.78rem;
+      margin-left: 0.3rem;
+    }
+    input[type="text"], input[type="url"], select {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: #fff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input[type="text"]:focus, input[type="url"]:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(31, 78, 216, 0.12);
+    }
+    .checkbox-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+    .checkbox-field:hover { border-color: #c8cdd6; }
+    .checkbox-field input { margin-top: 0.15rem; }
+    .checkbox-field-content label {
+      margin: 0;
+      cursor: pointer;
+    }
+    .checkbox-field-content .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+    }
+    .color-input {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .color-input input[type="color"] {
+      width: 44px;
+      height: 38px;
+      padding: 2px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      background: #fff;
+    }
+    .color-input input[type="text"] {
+      flex: 1;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.9rem;
+    }
+    .mode-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .mode-toggle label {
+      margin: 0;
+      padding: 0.7rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .mode-toggle input { display: none; }
+    .mode-toggle input:checked + label {
+      border-color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 8%, #fff);
+      color: var(--primary);
+    }
+    .submit {
+      width: 100%;
+      padding: 0.95rem 1.5rem;
+      background: var(--primary);
+      color: #fff;
+      border: 0;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .submit:hover { background: var(--primary-hover); }
+    .submit:active { transform: translateY(1px); }
+    .submit:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+    .response {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      border-radius: 12px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      display: none;
+    }
+    .response.show { display: block; }
+    .response.pending {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: var(--muted);
+    }
+    .response.success {
+      background: #ecfdf5;
+      border: 1px solid #6ee7b7;
+      color: #065f46;
+    }
+    .response.error {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      color: #991b1b;
+    }
+    .hidden { display: none !important; }
+    code.inline {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Partner Funding — Test Form</h1>
+    <p class="subtitle">
+      Standalone tester for the n8n workflow. Use this until Slack is wired up.
+      Submits the same JSON payload your Slack form would.
+    </p>
+
+    <form id="form">
+
+      <!-- ===================== Config ===================== -->
+      <div class="card">
+        <h2>Config</h2>
+        <div class="field">
+          <label for="webhook_url">
+            n8n Webhook URL <span class="req">*</span>
+            <span class="opt">paste from your activated workflow's Webhook node</span>
+          </label>
+          <input type="url" id="webhook_url" name="webhook_url" required
+                 placeholder="https://your-n8n-host/webhook/partner-funding">
+        </div>
+      </div>
+
+      <!-- ===================== Mode ===================== -->
+      <div class="card">
+        <h2>Mode</h2>
+        <div class="mode-toggle">
+          <input type="radio" id="mode_create" name="mode" value="create" checked>
+          <label for="mode_create">Create new partner</label>
+          <input type="radio" id="mode_update" name="mode" value="update">
+          <label for="mode_update">Update existing partner</label>
+        </div>
+        <div class="field hidden" id="slug_field">
+          <label for="slug">Slug <span class="req">*</span> <span class="opt">existing slug to update — e.g., acme-co</span></label>
+          <input type="text" id="slug" name="slug" placeholder="acme-co">
+        </div>
+      </div>
+
+      <!-- ===================== Required fields ===================== -->
+      <div class="card">
+        <h2>Required</h2>
+        <div class="field">
+          <label for="partner_name">Partner name <span class="req">*</span></label>
+          <input type="text" id="partner_name" name="partner_name" required placeholder="Acme Co">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="color_primary">Primary color (hex) <span class="req">*</span></label>
+            <div class="color-input">
+              <input type="color" id="color_primary_picker" value="#1f4ed8">
+              <input type="text" id="color_primary" name="color_primary" required value="#1f4ed8" pattern="^#[0-9A-Fa-f]{6}$">
+            </div>
+          </div>
+          <div class="field">
+            <label for="color_secondary">Secondary color (hex) <span class="req">*</span></label>
+            <div class="color-input">
+              <input type="color" id="color_secondary_picker" value="#0ea5e9">
+              <input type="text" id="color_secondary" name="color_secondary" required value="#0ea5e9" pattern="^#[0-9A-Fa-f]{6}$">
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="widget_url">Widget URL <span class="req">*</span> <span class="opt">Lendflow iw.lendflow.com URL</span></label>
+          <input type="url" id="widget_url" name="widget_url" required placeholder="https://iw.lendflow.com/?env=...">
+        </div>
+      </div>
+
+      <!-- ===================== Files (URLs) ===================== -->
+      <div class="card">
+        <h2>Files (optional)</h2>
+        <div class="field">
+          <label for="logo_file_url">
+            Logo URL <span class="opt">leave blank → header shows partner name as text</span>
+          </label>
+          <input type="url" id="logo_file_url" name="logo_file_url"
+                 placeholder="https://...somewhere.com/logo.png">
+        </div>
+        <div class="field">
+          <label for="hero_file_url">
+            Hero image URL <span class="opt">leave blank → uses global default (florista)</span>
+          </label>
+          <input type="url" id="hero_file_url" name="hero_file_url"
+                 placeholder="https://...somewhere.com/hero.jpg">
+        </div>
+        <div class="field" style="font-size: 0.8rem; color: var(--muted); padding: 0.6rem; background: #fef3c7; border-radius: 8px; border: 1px solid #fde68a;">
+          ⚠️ The baseline workflow doesn't yet download files. These URLs will be sent in the payload but skipped until the logo/hero TODO branches are wired. Test with no logo + default hero for now.
+        </div>
+      </div>
+
+      <!-- ===================== Flags ===================== -->
+      <div class="card">
+        <h2>Flags (optional)</h2>
+        <div class="field">
+          <div class="checkbox-field">
+            <input type="checkbox" id="embed_widget" name="embed_widget">
+            <div class="checkbox-field-content">
+              <label for="embed_widget">Embed widget inline</label>
+              <div class="hint">If unchecked (default), CTA opens widget on-page via lendflow-loader.js</div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="checkbox-field">
+            <input type="checkbox" id="cobrand" name="cobrand">
+            <div class="checkbox-field-content">
+              <label for="cobrand">Co-brand with Lendflow</label>
+              <div class="hint">Adds "Funding powered by Lendflow" line in footer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== UTM ===================== -->
+      <div class="card">
+        <h2>UTM tracking (optional)</h2>
+        <div class="field-row">
+          <div class="field">
+            <label for="utm_source">utm_source</label>
+            <input type="text" id="utm_source" name="utm_source" placeholder="email">
+          </div>
+          <div class="field">
+            <label for="utm_medium">utm_medium</label>
+            <input type="text" id="utm_medium" name="utm_medium" placeholder="newsletter">
+          </div>
+        </div>
+        <div class="field">
+          <label for="utm_campaign">utm_campaign</label>
+          <input type="text" id="utm_campaign" name="utm_campaign" placeholder="spring2026">
+        </div>
+      </div>
+
+      <!-- ===================== Requester (Slack stub) ===================== -->
+      <div class="card">
+        <h2>Slack requester (optional)</h2>
+        <div class="field">
+          <label for="requester_slack_id">
+            Slack user ID <span class="opt">e.g., U01ABCD — leave blank in tests if Slack DM is disabled</span>
+          </label>
+          <input type="text" id="requester_slack_id" name="requester_slack_id" placeholder="U01ABCD">
+        </div>
+      </div>
+
+      <button type="submit" class="submit" id="submitBtn">Send to n8n webhook</button>
+
+      <div id="response" class="response"></div>
+    </form>
+  </div>
+
+  <script>
+    // ---------- Mode toggle ----------
+    const slugField = document.getElementById('slug_field');
+    document.querySelectorAll('input[name="mode"]').forEach((r) => {
+      r.addEventListener('change', () => {
+        if (r.value === 'update' && r.checked) {
+          slugField.classList.remove('hidden');
+          document.getElementById('slug').required = true;
+        } else if (r.value === 'create' && r.checked) {
+          slugField.classList.add('hidden');
+          document.getElementById('slug').required = false;
+        }
+      });
+    });
+
+    // ---------- Color picker ↔ hex text sync ----------
+    function syncColor(pickerId, textId) {
+      const picker = document.getElementById(pickerId);
+      const text = document.getElementById(textId);
+      picker.addEventListener('input', () => { text.value = picker.value; });
+      text.addEventListener('input', () => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(text.value)) picker.value = text.value;
+      });
+    }
+    syncColor('color_primary_picker', 'color_primary');
+    syncColor('color_secondary_picker', 'color_secondary');
+
+    // ---------- Persist webhook URL in localStorage ----------
+    const webhookInput = document.getElementById('webhook_url');
+    webhookInput.value = localStorage.getItem('partnerfunding_webhook_url') || '';
+    webhookInput.addEventListener('change', () => {
+      localStorage.setItem('partnerfunding_webhook_url', webhookInput.value);
+    });
+
+    // ---------- Submit handler ----------
+    const form = document.getElementById('form');
+    const responseEl = document.getElementById('response');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function setResponse(state, content) {
+      responseEl.className = `response show ${state}`;
+      responseEl.textContent = content;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const webhookUrl = webhookInput.value.trim();
+      if (!webhookUrl) {
+        setResponse('error', 'Webhook URL is required.');
+        return;
+      }
+
+      // Build payload (matches the shape validate.js expects in body)
+      const payload = {
+        mode: form.mode.value,
+        slug: form.slug.value.trim() || undefined,
+        partner_name: form.partner_name.value.trim(),
+        color_primary: form.color_primary.value.trim(),
+        color_secondary: form.color_secondary.value.trim(),
+        widget_url: form.widget_url.value.trim(),
+        logo_file_url: form.logo_file_url.value.trim() || undefined,
+        hero_file_url: form.hero_file_url.value.trim() || undefined,
+        embed_widget: form.embed_widget.checked,
+        cobrand: form.cobrand.checked,
+        utm_source: form.utm_source.value.trim() || undefined,
+        utm_medium: form.utm_medium.value.trim() || undefined,
+        utm_campaign: form.utm_campaign.value.trim() || undefined,
+        requester_slack_id: form.requester_slack_id.value.trim() || undefined,
+      };
+
+      // Strip undefineds for clean payload
+      Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      setResponse('pending', 'Sending payload to n8n…\n\n' + JSON.stringify(payload, null, 2));
+
+      const start = Date.now();
+      try {
+        const res = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+        const text = await res.text();
+        let body;
+        try { body = JSON.parse(text); } catch (_) { body = text; }
+
+        if (res.ok) {
+          setResponse(
+            'success',
+            `✅ HTTP ${res.status} in ${elapsed}s\n\n` +
+            (typeof body === 'string' ? body : JSON.stringify(body, null, 2))
+          );
+        } else {
+          setResponse(
+            'error',
+            `❌ HTTP ${res.status} in ${elapsed}s\n\n` +
+            (typeof body === 'string' ? body : JSON.stringify(body, null, 2))
+          );
+        }
+      } catch (err) {
+        const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+        setResponse('error', `❌ Network error after ${elapsed}s\n\n${err.message}`);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send to n8n webhook';
+      }
+    });
+  </script>
+</body>
+</html>

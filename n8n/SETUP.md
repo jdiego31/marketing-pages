@@ -120,22 +120,53 @@ El Slack Workflow form **no expone directamente file URLs** — necesita un prim
 
 ## Testing el workflow
 
-**Test 1: validation sola (paso 1-2)**
-- Pegar un payload de prueba en el Webhook node con datos válidos
-- Verificar que el Code "validate" devuelve el JSON normalizado
+### Quickstart: test sin Slack (con `test-form.html`)
 
-**Test 2: dry run sin Vercel deploy**
-- Comentar (deshabilitar) el HTTP POST a Vercel
-- Correr con un partner ficticio (`mode=create`, `slug` único)
-- Verificar que GitHub recibe los commits
+Hasta que tengás Slack OAuth configurado, podés probar el workflow completo usando el HTML form local:
 
-**Test 3: end-to-end con partner `_test`**
-- Habilitar todo
-- Mandar un payload real desde el Slack form (o curl directo al webhook)
-- Verificar:
-  - GitHub muestra `_test/index.html`, `styles.css`, etc.
-  - `partnerfunding.vercel.app/_test/` carga
-  - Slack recibe DM con el link
+1. **Setup mínimo en n8n:**
+   - Crear credentials `github_pat` y `vercel_token` (Slack no hace falta — los nodes de Slack vienen pre-desactivados en `workflow.json`)
+   - Import `workflow.json`
+   - Bindear credenciales en los HTTP nodes que las usan
+   - Activar el workflow (toggle "Active")
+   - Copiar la **Production Webhook URL** del Webhook node
+
+2. **Abrir el test form:**
+   ```bash
+   open n8n/test-form.html
+   ```
+   (o doble click desde Finder)
+
+3. **Pegar el webhook URL en el primer campo** (se guarda en localStorage)
+
+4. **Llenar el form y submit:**
+   - `mode=create`, `partner_name=Test Partner`, colores, widget_url, etc.
+   - Logo y hero: dejar en blanco para testear el fallback (texto + default global)
+
+5. **Ver la respuesta:**
+   - Success → JSON con `{ status, slug, url, vercel_deployment_id, ... }`
+   - Error → JSON con `{ status: "error", message, ... }`
+   - Loading takes ~25-35s (zipball download + Vercel deploy + 15s wait + health check)
+
+6. **Verificar manualmente:**
+   - GitHub: `https://github.com/jdiego31/marketing-pages` muestra el commit nuevo
+   - Vercel: `https://partnerfunding.vercel.app/<slug>/` carga el partner
+
+### Cuando llegue Slack (mañana)
+
+1. Crear la credential Slack OAuth en n8n
+2. Bindear en los nodes `Slack Success` y `Slack Error`
+3. **Habilitar los dos Slack nodes** (en el JSON están `"disabled": true` — toggle desde la UI o quitar el flag)
+4. Setup el Slack Workflow form con los campos de la sección anterior, apuntar submit al webhook URL
+5. Eliminar `test-form.html` o dejarlo como herramienta de debug
+
+### Test progresivo (si rompe algo)
+
+| Test | Cómo |
+|---|---|
+| Validation solo | Pegar payload en Webhook node "Listen for Test Event" → ver output de `Validate` |
+| GitHub commit sin deploy | Desactivar `Deploy to Vercel` y nodes posteriores → correr → ver el commit en GitHub |
+| Full E2E | `test-form.html` con datos reales |
 
 ## Errores comunes
 

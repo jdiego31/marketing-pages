@@ -5,10 +5,8 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "partner-funding",
-        "responseMode": "lastNode",
-        "options": {
-          "responseCode": 200
-        }
+        "responseMode": "responseNode",
+        "options": {}
       },
       "id": "a1111111-0000-0000-0000-000000000001",
       "name": "Webhook",
@@ -312,6 +310,18 @@
     },
     {
       "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'success', mode: $('Validate').first().json.mode, slug: $('Validate').first().json.slug, partner_name: $('Validate').first().json.partner_name, url: 'https://partnerfunding.vercel.app/' + $('Validate').first().json.slug + '/', vercel_deployment_id: $('Deploy to Vercel').first().json.id, vercel_preview_url: $('Deploy to Vercel').first().json.url, health_status: $('Health Check').first().json.statusCode }) }}",
+        "options": {}
+      },
+      "id": "a1111111-0000-0000-0000-000000000012",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [3360, 200]
+    },
+    {
+      "parameters": {
         "resource": "message",
         "operation": "post",
         "select": "user",
@@ -323,10 +333,26 @@
       "name": "Slack Success",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.3,
-      "position": [3360, 300],
+      "position": [3600, 200],
       "credentials": {
         "slackOAuth2Api": { "id": "REPLACE_WITH_SLACK_OAUTH_ID", "name": "slack_oauth" }
-      }
+      },
+      "disabled": true,
+      "notes": "Disabled for testing without Slack credentials. Enable after Slack OAuth is configured."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'error', error: 'mode_existence_mismatch', mode: $('Validate').first().json.mode, slug: $('Validate').first().json.slug, slug_exists: $('Check Slug Exists').first().json.statusCode === 200, message: $('Validate').first().json.mode === 'create' ? 'Slug already exists. Use mode=update or pick a different partner_name.' : 'Slug does not exist. Use mode=create first.' }) }}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "id": "a1111111-0000-0000-0000-000000000013",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 500]
     },
     {
       "parameters": {
@@ -341,10 +367,12 @@
       "name": "Slack Error",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.3,
-      "position": [1200, 600],
+      "position": [1440, 500],
       "credentials": {
         "slackOAuth2Api": { "id": "REPLACE_WITH_SLACK_OAUTH_ID", "name": "slack_oauth" }
-      }
+      },
+      "disabled": true,
+      "notes": "Disabled for testing without Slack credentials. Enable after Slack OAuth is configured."
     }
   ],
   "pinData": {},
@@ -364,8 +392,11 @@
           { "node": "Read Template", "type": "main", "index": 0 },
           { "node": "Read Template CSS", "type": "main", "index": 0 }
         ],
-        [{ "node": "Slack Error", "type": "main", "index": 0 }]
+        [{ "node": "Respond Error", "type": "main", "index": 0 }]
       ]
+    },
+    "Respond Error": {
+      "main": [[{ "node": "Slack Error", "type": "main", "index": 0 }]]
     },
     "Read Template": {
       "main": [[{ "node": "Process Template", "type": "main", "index": 0 }]]
@@ -398,6 +429,9 @@
       "main": [[{ "node": "Health Check", "type": "main", "index": 0 }]]
     },
     "Health Check": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    },
+    "Respond Success": {
       "main": [[{ "node": "Slack Success", "type": "main", "index": 0 }]]
     }
   },
