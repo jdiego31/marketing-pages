@@ -140,11 +140,18 @@ Hasta que tengás Slack OAuth configurado, podés probar el workflow completo us
    - Activar el workflow (toggle "Active")
    - Copiar la **Production Webhook URL** del Webhook node
 
-2. **Abrir el test form:**
-   ```bash
-   open n8n/test-form.html
+2. **Abrir el test form** — está deployado en Vercel para que puedas compartir/abrir desde cualquier lado:
+
+   **URL pública (shareable):**
    ```
-   (o doble click desde Finder)
+   https://partnerfunding.vercel.app/_test/test-form.html
+   ```
+
+   **Local (si necesitás iterar sobre el form):**
+   ```bash
+   cd _test && python3 -m http.server 8000
+   # luego http://localhost:8000/test-form.html
+   ```
 
 3. **Pegar el webhook URL en el primer campo** (se guarda en localStorage)
 

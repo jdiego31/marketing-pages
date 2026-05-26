@@ -73,7 +73,7 @@ if (mode === 'create') {
 }
 
 // Guard reserved paths
-const RESERVED = ['template', '_assets', 'n8n', 'example'];
+const RESERVED = ['template', '_assets', '_test', 'n8n', 'example'];
 if (mode === 'create' && RESERVED.includes(slug)) {
   throw new Error(`Slug '${slug}' is reserved.`);
 }
