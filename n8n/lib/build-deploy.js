@@ -21,6 +21,7 @@
  */
 
 const items = $input.all();
+const slug = $('Validate').first().json.slug;
 
 const EXCLUDE = [
   /^template\//,
@@ -35,36 +36,57 @@ const EXCLUDE = [
 ];
 
 const files = [];
+
 for (const item of items) {
-  // n8n's Compression Decompress emits one item per file, with binary in $binary.data
-  const fileName = item.json.fileName || item.json.name || item.binary?.data?.fileName;
-  if (!fileName) continue;
+  if (!item.binary || typeof item.binary !== 'object') continue;
 
-  // Strip GitHub zipball's top-level wrapper folder
-  // e.g., "jdiego31-marketing-pages-abc1234/index.html" → "index.html"
-  const stripped = fileName.replace(/^[^/]+\//, '');
-  if (!stripped || stripped.endsWith('/')) continue; // skip dirs
+  // Iterate ALL binary properties on the item.
+  //   Newer n8n: one item with many binary keys (file_0, file_1, ...)
+  //   Older n8n: multiple items, each with one binary key (data)
+  for (const [propName, bin] of Object.entries(item.binary)) {
+    if (!bin || typeof bin !== 'object') continue;
 
-  // Skip excluded paths
-  if (EXCLUDE.some((re) => re.test(stripped))) continue;
+    const fileName = bin.fileName || bin.name;
+    if (!fileName) continue;
 
-  const binaryData = item.binary?.data?.data;
-  if (!binaryData) continue;
+    // GitHub zipball wraps in "jdiego31-marketing-pages-abc1234/"
+    const stripped = fileName.replace(/^[^/]+\//, '');
+    if (!stripped || stripped.endsWith('/')) continue;
 
-  files.push({
-    file: stripped,
-    data: binaryData, // already base64 from n8n Compression node
-    encoding: 'base64',
-  });
+    if (EXCLUDE.some((re) => re.test(stripped))) continue;
+
+    const data = bin.data;
+    if (!data) continue;
+
+    files.push({
+      file: stripped,
+      data,
+      encoding: 'base64',
+    });
+  }
 }
 
 if (files.length === 0) {
-  throw new Error('No files to deploy after filtering — check zipball extraction.');
+  // Debug aid: dump what we received so we can adjust
+  const debug = items.map((it, i) => ({
+    index: i,
+    json_keys: Object.keys(it.json || {}),
+    binary_keys: Object.keys(it.binary || {}),
+    first_binary_sample: it.binary ? (() => {
+      const k = Object.keys(it.binary)[0];
+      const b = k ? it.binary[k] : null;
+      return b ? { propName: k, fileName: b.fileName, hasData: !!b.data, mimeType: b.mimeType } : null;
+    })() : null,
+  }));
+  throw new Error('No files to deploy. Debug: ' + JSON.stringify(debug));
 }
 
-return {
+return [{
   json: {
     files,
     file_count: files.length,
+    slug,
+    partner_name: $('Validate').first().json.partner_name,
+    requester_slack_id: $('Validate').first().json.requester_slack_id,
   },
-};
+}];
