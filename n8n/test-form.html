@@ -440,9 +440,10 @@
 
       const start = Date.now();
       try {
+        // No Content-Type header → browser sends text/plain → no CORS preflight.
+        // The Validate code node parses the string body as JSON.
         const res = await fetch(webhookUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
         const elapsed = ((Date.now() - start) / 1000).toFixed(1);

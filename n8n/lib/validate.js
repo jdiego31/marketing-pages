@@ -8,7 +8,18 @@
  * to send error response to Slack.
  */
 
-const payload = $input.first().json.body;
+// Body can arrive as:
+//   - object (Content-Type: application/json) → use directly
+//   - string (Content-Type: text/plain or none) → JSON.parse
+//   - direct fields in $json (some webhook configs) → fallback
+let payload = $input.first().json.body;
+if (typeof payload === 'string') {
+  try { payload = JSON.parse(payload); }
+  catch (e) { throw new Error(`Body is not valid JSON: ${e.message}`); }
+}
+if (!payload || typeof payload !== 'object') {
+  payload = $input.first().json;
+}
 
 // ---------- Required fields ----------
 const REQUIRED = ['mode', 'partner_name', 'color_primary', 'color_secondary', 'widget_url'];
