@@ -73,33 +73,37 @@ if (mode === 'create' && RESERVED.includes(slug)) {
 }
 
 // ---------- Widget URL + UTM ----------
-let widgetUrl;
-try {
-  widgetUrl = new URL(widget_url);
-} catch (e) {
-  throw new Error(`Invalid widget_url. Value: ${JSON.stringify(widget_url)} (type: ${typeof widget_url}). URL parse error: ${e.message}`);
+// n8n's Code node sandbox doesn't expose the `URL` global, so we do
+// validation + param appending with plain string ops.
+if (typeof widget_url !== 'string' || !/^https?:\/\/[^\s]+/i.test(widget_url)) {
+  throw new Error(`Invalid widget_url. Value: ${JSON.stringify(widget_url)} (type: ${typeof widget_url}). Must be a string starting with http:// or https://.`);
 }
 
-// Append UTMs only if provided
-['utm_source', 'utm_medium', 'utm_campaign'].forEach((key) => {
-  const value = payload[key];
-  if (value && typeof value === 'string' && value.trim()) {
-    widgetUrl.searchParams.set(key, value.trim());
+function appendQueryParams(base, params) {
+  const pairs = [];
+  for (const [k, v] of Object.entries(params)) {
+    if (v && String(v).trim()) {
+      pairs.push(`${encodeURIComponent(k)}=${encodeURIComponent(String(v).trim())}`);
+    }
   }
+  if (pairs.length === 0) return base;
+  const sep = base.indexOf('?') === -1 ? '?' : '&';
+  return base + sep + pairs.join('&');
+}
+
+const widget_url_final = appendQueryParams(widget_url, {
+  utm_source: payload.utm_source,
+  utm_medium: payload.utm_medium,
+  utm_campaign: payload.utm_campaign,
 });
 
-const widget_url_final = widgetUrl.toString();
-
 // ---------- File extensions ----------
+// No URL parser — strip query/hash and grab the last `.ext` from the path.
 function extFromUrl(url, fallback) {
-  if (!url) return fallback;
-  try {
-    const pathname = new URL(url).pathname;
-    const m = pathname.match(/\.([a-z0-9]+)$/i);
-    return m ? m[1].toLowerCase() : fallback;
-  } catch (e) {
-    return fallback;
-  }
+  if (!url || typeof url !== 'string') return fallback;
+  const pathOnly = url.split('?')[0].split('#')[0];
+  const m = pathOnly.match(/\.([a-z0-9]+)$/i);
+  return m ? m[1].toLowerCase() : fallback;
 }
 
 const has_logo = !!payload.logo_file_url;
