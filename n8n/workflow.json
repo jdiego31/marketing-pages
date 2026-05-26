@@ -249,6 +249,78 @@
     {
       "parameters": {
         "method": "GET",
+        "url": "={{ $('Validate').first().json.hero_file_url || 'about:blank' }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "hero"
+            }
+          },
+          "redirect": { "redirect": { "followRedirects": true } }
+        }
+      },
+      "id": "a1111111-0000-0000-0000-000000000016",
+      "name": "Download Hero",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2220, 400],
+      "continueOnFail": true,
+      "notes": "Fails silently if hero_file_data was sent inline OR if no hero was provided (falls back to global default)."
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/jdiego31/marketing-pages/contents/{{ $('Validate').first().json.slug }}/hero.{{ $('Validate').first().json.hero_ext }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/vnd.github+json" },
+            { "name": "X-GitHub-Api-Version", "value": "2022-11-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "{\n  \"message\": \"Add hero for {{ $('Validate').first().json.slug }}\",\n  \"content\": \"{{ $('Validate').first().json.hero_file_data || $('Download Hero').first().binary.hero.data }}\"\n}"
+      },
+      "id": "a1111111-0000-0000-0000-000000000017",
+      "name": "PUT hero",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2400, 400],
+      "continueOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_GITHUB_PAT_ID", "name": "github_pat" }
+      },
+      "notes": "Runs only if Validate has has_hero=true. continueOnFail in case the user picked the default hero (no actual file)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "strict" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "has-hero-true",
+              "leftValue": "={{ $('Validate').first().json.has_hero }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ]
+        }
+      },
+      "id": "a1111111-0000-0000-0000-000000000018",
+      "name": "Has Hero?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
         "url": "https://api.github.com/repos/jdiego31/marketing-pages/zipball/main",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
@@ -463,6 +535,18 @@
       "main": [[{ "node": "PUT logo", "type": "main", "index": 0 }]]
     },
     "PUT logo": {
+      "main": [[{ "node": "Has Hero?", "type": "main", "index": 0 }]]
+    },
+    "Has Hero?": {
+      "main": [
+        [{ "node": "Download Hero", "type": "main", "index": 0 }],
+        [{ "node": "Get Zipball", "type": "main", "index": 0 }]
+      ]
+    },
+    "Download Hero": {
+      "main": [[{ "node": "PUT hero", "type": "main", "index": 0 }]]
+    },
+    "PUT hero": {
       "main": [[{ "node": "Get Zipball", "type": "main", "index": 0 }]]
     },
     "Get Zipball": {
