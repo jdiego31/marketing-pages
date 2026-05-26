@@ -51,8 +51,6 @@ function processIfBlock(html, flag, keep) {
 }
 
 const flags = {
-  logo: data.has_logo,
-  nologo: !data.has_logo,
   embed: data.embed_widget,
   loader: !data.embed_widget,
   cobrand: data.cobrand,

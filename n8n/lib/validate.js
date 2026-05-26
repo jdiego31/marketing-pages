@@ -22,7 +22,7 @@ if (!payload || typeof payload !== 'object') {
 }
 
 // ---------- Required fields ----------
-const REQUIRED = ['mode', 'partner_name', 'color_primary', 'color_secondary', 'widget_url'];
+const REQUIRED = ['mode', 'partner_name', 'color_primary', 'color_secondary', 'widget_url', 'logo_file_url'];
 const missing = REQUIRED.filter((f) => !payload[f]);
 if (missing.length) {
   throw new Error(`Missing required fields: ${missing.join(', ')}`);
@@ -106,9 +106,8 @@ function extFromUrl(url, fallback) {
   return m ? m[1].toLowerCase() : fallback;
 }
 
-const has_logo = !!payload.logo_file_url;
 const has_hero = !!payload.hero_file_url;
-const logo_ext = has_logo ? extFromUrl(payload.logo_file_url, 'png') : null;
+const logo_ext = extFromUrl(payload.logo_file_url, 'png');
 const hero_ext = has_hero ? extFromUrl(payload.hero_file_url, 'jpg') : null;
 
 // ---------- Output ----------
@@ -121,13 +120,12 @@ return {
     color_secondary,
     widget_url: widget_url_final,
 
-    has_logo,
     has_hero,
-    logo_file_url: payload.logo_file_url || null,
+    logo_file_url: payload.logo_file_url,
     hero_file_url: payload.hero_file_url || null,
     logo_ext,
     hero_ext,
-    logo_path: has_logo ? `./logo.${logo_ext}` : '',
+    logo_path: `./logo.${logo_ext}`,
     hero_image_path: has_hero ? `./hero.${hero_ext}` : '/_assets/hero-default.jpg',
 
     embed_widget: !!payload.embed_widget,

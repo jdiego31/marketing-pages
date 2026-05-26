@@ -19,7 +19,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "// === Validate input + apply UTMs + generate slug ===\n// See n8n/lib/validate.js for the authoritative version.\n\nlet payload = $input.first().json.body;\nif (typeof payload === 'string') {\n  try { payload = JSON.parse(payload); }\n  catch (e) { throw new Error(`Body is not valid JSON: ${e.message}`); }\n}\nif (!payload || typeof payload !== 'object') payload = $input.first().json;\n\nconst REQUIRED = ['mode', 'partner_name', 'color_primary', 'color_secondary', 'widget_url'];\nconst missing = REQUIRED.filter((f) => !payload[f]);\nif (missing.length) throw new Error(`Missing required fields: ${missing.join(', ')}`);\n\nconst { mode, partner_name, color_primary, color_secondary, widget_url } = payload;\n\nif (!['create', 'update'].includes(mode)) throw new Error(`Invalid mode '${mode}'.`);\n\nconst HEX = /^#[0-9A-F]{6}$/i;\nif (!HEX.test(color_primary)) throw new Error(`Invalid color_primary '${color_primary}'.`);\nif (!HEX.test(color_secondary)) throw new Error(`Invalid color_secondary '${color_secondary}'.`);\n\nfunction toSlug(s) {\n  return s.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');\n}\n\nlet slug;\nif (mode === 'create') {\n  slug = toSlug(partner_name);\n  if (!slug) throw new Error(`Cannot derive slug from '${partner_name}'.`);\n} else {\n  if (!payload.slug) throw new Error(\"'update' mode requires slug.\");\n  slug = payload.slug;\n  if (!/^[a-z0-9-]+$/.test(slug)) throw new Error(`Invalid slug '${slug}'.`);\n}\n\nconst RESERVED = ['template', '_assets', 'n8n', 'example'];\nif (mode === 'create' && RESERVED.includes(slug)) throw new Error(`Slug '${slug}' is reserved.`);\n\nif (typeof widget_url !== 'string' || !/^https?:\\/\\/[^\\s]+/i.test(widget_url)) {\n  throw new Error(`Invalid widget_url. Value: ${JSON.stringify(widget_url)} (type: ${typeof widget_url}).`);\n}\nfunction appendQueryParams(base, params) {\n  const pairs = [];\n  for (const [k, v] of Object.entries(params)) {\n    if (v && String(v).trim()) pairs.push(`${encodeURIComponent(k)}=${encodeURIComponent(String(v).trim())}`);\n  }\n  if (pairs.length === 0) return base;\n  return base + (base.indexOf('?') === -1 ? '?' : '&') + pairs.join('&');\n}\nconst widget_url_final = appendQueryParams(widget_url, { utm_source: payload.utm_source, utm_medium: payload.utm_medium, utm_campaign: payload.utm_campaign });\n\nfunction extFromUrl(url, fallback) {\n  if (!url || typeof url !== 'string') return fallback;\n  const m = url.split('?')[0].split('#')[0].match(/\\.([a-z0-9]+)$/i);\n  return m ? m[1].toLowerCase() : fallback;\n}\n\nconst has_logo = !!payload.logo_file_url;\nconst has_hero = !!payload.hero_file_url;\nconst logo_ext = has_logo ? extFromUrl(payload.logo_file_url, 'png') : null;\nconst hero_ext = has_hero ? extFromUrl(payload.hero_file_url, 'jpg') : null;\n\nreturn [{\n  json: {\n    slug, mode, partner_name, color_primary, color_secondary,\n    widget_url: widget_url_final,\n    has_logo, has_hero,\n    logo_file_url: payload.logo_file_url || null,\n    hero_file_url: payload.hero_file_url || null,\n    logo_ext, hero_ext,\n    logo_path: has_logo ? `./logo.${logo_ext}` : '',\n    hero_image_path: has_hero ? `./hero.${hero_ext}` : '/_assets/hero-default.jpg',\n    embed_widget: !!payload.embed_widget,\n    cobrand: !!payload.cobrand,\n    cta_href: payload.embed_widget ? '#apply' : widget_url_final,\n    requester_slack_id: payload.requester_slack_id || null,\n  }\n}];"
+        "jsCode": "// === Validate input + apply UTMs + generate slug ===\n// See n8n/lib/validate.js for the authoritative version.\n\nlet payload = $input.first().json.body;\nif (typeof payload === 'string') {\n  try { payload = JSON.parse(payload); }\n  catch (e) { throw new Error(`Body is not valid JSON: ${e.message}`); }\n}\nif (!payload || typeof payload !== 'object') payload = $input.first().json;\n\nconst REQUIRED = ['mode', 'partner_name', 'color_primary', 'color_secondary', 'widget_url', 'logo_file_url'];\nconst missing = REQUIRED.filter((f) => !payload[f]);\nif (missing.length) throw new Error(`Missing required fields: ${missing.join(', ')}`);\n\nconst { mode, partner_name, color_primary, color_secondary, widget_url } = payload;\n\nif (!['create', 'update'].includes(mode)) throw new Error(`Invalid mode '${mode}'.`);\n\nconst HEX = /^#[0-9A-F]{6}$/i;\nif (!HEX.test(color_primary)) throw new Error(`Invalid color_primary '${color_primary}'.`);\nif (!HEX.test(color_secondary)) throw new Error(`Invalid color_secondary '${color_secondary}'.`);\n\nfunction toSlug(s) {\n  return s.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');\n}\n\nlet slug;\nif (mode === 'create') {\n  slug = toSlug(partner_name);\n  if (!slug) throw new Error(`Cannot derive slug from '${partner_name}'.`);\n} else {\n  if (!payload.slug) throw new Error(\"'update' mode requires slug.\");\n  slug = payload.slug;\n  if (!/^[a-z0-9-]+$/.test(slug)) throw new Error(`Invalid slug '${slug}'.`);\n}\n\nconst RESERVED = ['template', '_assets', 'n8n', 'example'];\nif (mode === 'create' && RESERVED.includes(slug)) throw new Error(`Slug '${slug}' is reserved.`);\n\nif (typeof widget_url !== 'string' || !/^https?:\\/\\/[^\\s]+/i.test(widget_url)) {\n  throw new Error(`Invalid widget_url. Value: ${JSON.stringify(widget_url)} (type: ${typeof widget_url}).`);\n}\nfunction appendQueryParams(base, params) {\n  const pairs = [];\n  for (const [k, v] of Object.entries(params)) {\n    if (v && String(v).trim()) pairs.push(`${encodeURIComponent(k)}=${encodeURIComponent(String(v).trim())}`);\n  }\n  if (pairs.length === 0) return base;\n  return base + (base.indexOf('?') === -1 ? '?' : '&') + pairs.join('&');\n}\nconst widget_url_final = appendQueryParams(widget_url, { utm_source: payload.utm_source, utm_medium: payload.utm_medium, utm_campaign: payload.utm_campaign });\n\nfunction extFromUrl(url, fallback) {\n  if (!url || typeof url !== 'string') return fallback;\n  const m = url.split('?')[0].split('#')[0].match(/\\.([a-z0-9]+)$/i);\n  return m ? m[1].toLowerCase() : fallback;\n}\n\nconst has_hero = !!payload.hero_file_url;\nconst logo_ext = extFromUrl(payload.logo_file_url, 'png');\nconst hero_ext = has_hero ? extFromUrl(payload.hero_file_url, 'jpg') : null;\n\nreturn [{\n  json: {\n    slug, mode, partner_name, color_primary, color_secondary,\n    widget_url: widget_url_final,\n    has_hero,\n    logo_file_url: payload.logo_file_url,\n    hero_file_url: payload.hero_file_url || null,\n    logo_ext, hero_ext,\n    logo_path: `./logo.${logo_ext}`,\n    hero_image_path: has_hero ? `./hero.${hero_ext}` : '/_assets/hero-default.jpg',\n    embed_widget: !!payload.embed_widget,\n    cobrand: !!payload.cobrand,\n    cta_href: payload.embed_widget ? '#apply' : widget_url_final,\n    requester_slack_id: payload.requester_slack_id || null,\n  }\n}];"
       },
       "id": "a1111111-0000-0000-0000-000000000002",
       "name": "Validate",
@@ -135,7 +135,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "// === Process template: placeholder replace + IF blocks ===\n// See n8n/lib/process.js for authoritative version.\n\nconst data = $('Validate').first().json;\nconst templateB64 = $('Read Template').first().json.content;\nlet html = Buffer.from(templateB64, 'base64').toString('utf-8');\n\nconst replacements = {\n  PARTNER_NAME: data.partner_name,\n  LOGO_PATH: data.logo_path || '',\n  COLOR_PRIMARY: data.color_primary,\n  COLOR_SECONDARY: data.color_secondary,\n  WIDGET_URL: data.widget_url,\n  HERO_IMAGE_PATH: data.hero_image_path,\n  CTA_HREF: data.cta_href,\n};\n\nfor (const [k, v] of Object.entries(replacements)) {\n  html = html.split(`{{${k}}}`).join(v);\n}\n\nfunction processIf(html, flag, keep) {\n  const s = `<!--IF:${flag}-->`;\n  const e = `<!--/IF:${flag}-->`;\n  if (keep) return html.split(s).join('').split(e).join('');\n  const re = new RegExp(`<!--IF:${flag}-->[\\\\s\\\\S]*?<!--/IF:${flag}-->`, 'g');\n  return html.replace(re, '');\n}\n\nconst flags = {\n  logo: data.has_logo,\n  nologo: !data.has_logo,\n  embed: data.embed_widget,\n  loader: !data.embed_widget,\n  cobrand: data.cobrand,\n};\nfor (const [flag, keep] of Object.entries(flags)) {\n  html = processIf(html, flag, keep);\n}\n\nconst processed_html_b64 = Buffer.from(html, 'utf-8').toString('base64');\nreturn [{ json: { ...data, processed_html: html, processed_html_b64 } }];"
+        "jsCode": "// === Process template: placeholder replace + IF blocks ===\n// See n8n/lib/process.js for authoritative version.\n\nconst data = $('Validate').first().json;\nconst templateB64 = $('Read Template').first().json.content;\nlet html = Buffer.from(templateB64, 'base64').toString('utf-8');\n\nconst replacements = {\n  PARTNER_NAME: data.partner_name,\n  LOGO_PATH: data.logo_path || '',\n  COLOR_PRIMARY: data.color_primary,\n  COLOR_SECONDARY: data.color_secondary,\n  WIDGET_URL: data.widget_url,\n  HERO_IMAGE_PATH: data.hero_image_path,\n  CTA_HREF: data.cta_href,\n};\n\nfor (const [k, v] of Object.entries(replacements)) {\n  html = html.split(`{{${k}}}`).join(v);\n}\n\nfunction processIf(html, flag, keep) {\n  const s = `<!--IF:${flag}-->`;\n  const e = `<!--/IF:${flag}-->`;\n  if (keep) return html.split(s).join('').split(e).join('');\n  const re = new RegExp(`<!--IF:${flag}-->[\\\\s\\\\S]*?<!--/IF:${flag}-->`, 'g');\n  return html.replace(re, '');\n}\n\nconst flags = {\n  embed: data.embed_widget,\n  loader: !data.embed_widget,\n  cobrand: data.cobrand,\n};\nfor (const [flag, keep] of Object.entries(flags)) {\n  html = processIf(html, flag, keep);\n}\n\nconst processed_html_b64 = Buffer.from(html, 'utf-8').toString('base64');\nreturn [{ json: { ...data, processed_html: html, processed_html_b64 } }];"
       },
       "id": "a1111111-0000-0000-0000-000000000007",
       "name": "Process Template",
@@ -193,6 +193,53 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [1680, 400],
+      "credentials": {
+        "httpHeaderAuth": { "id": "REPLACE_WITH_GITHUB_PAT_ID", "name": "github_pat" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Validate').first().json.logo_file_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "logo"
+            }
+          },
+          "redirect": { "redirect": { "followRedirects": true } }
+        }
+      },
+      "id": "a1111111-0000-0000-0000-000000000014",
+      "name": "Download Logo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1860, 400]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/jdiego31/marketing-pages/contents/{{ $('Validate').first().json.slug }}/logo.{{ $('Validate').first().json.logo_ext }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/vnd.github+json" },
+            { "name": "X-GitHub-Api-Version", "value": "2022-11-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "{\n  \"message\": \"Add logo for {{ $('Validate').first().json.slug }}\",\n  \"content\": \"{{ $('Download Logo').first().binary.logo.data }}\"\n}"
+      },
+      "id": "a1111111-0000-0000-0000-000000000015",
+      "name": "PUT logo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2040, 400],
       "credentials": {
         "httpHeaderAuth": { "id": "REPLACE_WITH_GITHUB_PAT_ID", "name": "github_pat" }
       }
@@ -408,6 +455,12 @@
       "main": [[{ "node": "PUT styles.css", "type": "main", "index": 0 }]]
     },
     "PUT styles.css": {
+      "main": [[{ "node": "Download Logo", "type": "main", "index": 0 }]]
+    },
+    "Download Logo": {
+      "main": [[{ "node": "PUT logo", "type": "main", "index": 0 }]]
+    },
+    "PUT logo": {
       "main": [[{ "node": "Get Zipball", "type": "main", "index": 0 }]]
     },
     "Get Zipball": {

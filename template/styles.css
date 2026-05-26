@@ -135,14 +135,6 @@ em { font-style: italic; }
   object-fit: contain;
 }
 
-.site-logo-text {
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text);
-  line-height: 1;
-}
-
 /* ============================================================
    Buttons
    ============================================================ */
