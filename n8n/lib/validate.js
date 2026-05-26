@@ -22,10 +22,16 @@ if (!payload || typeof payload !== 'object') {
 }
 
 // ---------- Required fields ----------
-const REQUIRED = ['mode', 'partner_name', 'color_primary', 'color_secondary', 'widget_url', 'logo_file_url'];
+const REQUIRED = ['mode', 'partner_name', 'color_primary', 'color_secondary', 'widget_url'];
 const missing = REQUIRED.filter((f) => !payload[f]);
 if (missing.length) {
   throw new Error(`Missing required fields: ${missing.join(', ')}`);
+}
+
+// Logo is required, but can come as either inline base64 data (test form)
+// or a URL to download from (Slack file URL)
+if (!payload.logo_file_data && !payload.logo_file_url) {
+  throw new Error('Logo is required: provide either logo_file_data (base64) or logo_file_url.');
 }
 
 const { mode, partner_name, color_primary, color_secondary, widget_url } = payload;
@@ -105,10 +111,25 @@ function extFromUrl(url, fallback) {
   const m = pathOnly.match(/\.([a-z0-9]+)$/i);
   return m ? m[1].toLowerCase() : fallback;
 }
+function extFromName(name, fallback) {
+  if (!name || typeof name !== 'string') return fallback;
+  const m = name.match(/\.([a-z0-9]+)$/i);
+  return m ? m[1].toLowerCase() : fallback;
+}
 
-const has_hero = !!payload.hero_file_url;
-const logo_ext = extFromUrl(payload.logo_file_url, 'png');
-const hero_ext = has_hero ? extFromUrl(payload.hero_file_url, 'jpg') : null;
+// Derive extensions — prefer the filename (from direct upload) over URL
+const has_logo_data = !!payload.logo_file_data;
+const has_hero_data = !!payload.hero_file_data;
+const has_hero_url = !!payload.hero_file_url;
+const has_hero = has_hero_data || has_hero_url;
+
+const logo_ext = has_logo_data
+  ? extFromName(payload.logo_file_name, 'png')
+  : extFromUrl(payload.logo_file_url, 'png');
+
+const hero_ext = has_hero_data
+  ? extFromName(payload.hero_file_name, 'jpg')
+  : (has_hero_url ? extFromUrl(payload.hero_file_url, 'jpg') : null);
 
 // ---------- Output ----------
 return {
@@ -120,12 +141,19 @@ return {
     color_secondary,
     widget_url: widget_url_final,
 
-    has_hero,
-    logo_file_url: payload.logo_file_url,
-    hero_file_url: payload.hero_file_url || null,
+    // Logo (required) — either inline base64 or URL to download
+    has_logo_data,
+    logo_file_data: payload.logo_file_data || null,
+    logo_file_url: payload.logo_file_url || null,
     logo_ext,
-    hero_ext,
     logo_path: `./logo.${logo_ext}`,
+
+    // Hero (optional) — either inline base64, URL, or default fallback
+    has_hero,
+    has_hero_data,
+    hero_file_data: payload.hero_file_data || null,
+    hero_file_url: payload.hero_file_url || null,
+    hero_ext,
     hero_image_path: has_hero ? `./hero.${hero_ext}` : '/_assets/hero-default.jpg',
 
     embed_widget: !!payload.embed_widget,

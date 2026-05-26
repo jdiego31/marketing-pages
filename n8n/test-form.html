@@ -96,6 +96,24 @@
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(31, 78, 216, 0.12);
     }
+    input[type="file"] {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: #fafbfc;
+      cursor: pointer;
+    }
+    input[type="file"]:hover { border-color: var(--primary); background: #fff; }
+    .file-meta {
+      margin-top: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: "JetBrains Mono", monospace;
+    }
+    .file-meta.error { color: var(--error); }
     .checkbox-field {
       display: flex;
       align-items: flex-start;
@@ -278,27 +296,26 @@
           <label for="widget_url">Widget URL <span class="req">*</span> <span class="opt">Lendflow iw.lendflow.com URL</span></label>
           <input type="url" id="widget_url" name="widget_url" required placeholder="https://iw.lendflow.com/?env=...">
         </div>
+        <div class="field">
+          <label for="logo_file">
+            Logo file <span class="req">*</span> <span class="opt">PNG, SVG, JPG · max 2MB</span>
+          </label>
+          <input type="file" id="logo_file" name="logo_file" required
+                 accept="image/png,image/svg+xml,image/jpeg,image/jpg">
+          <div class="file-meta" id="logo_file_meta"></div>
+        </div>
       </div>
 
-      <!-- ===================== Files (URLs) ===================== -->
+      <!-- ===================== Files (optional) ===================== -->
       <div class="card">
-        <h2>Files (optional)</h2>
+        <h2>Hero image (optional)</h2>
         <div class="field">
-          <label for="logo_file_url">
-            Logo URL <span class="opt">leave blank → header shows partner name as text</span>
+          <label for="hero_file">
+            Hero image file <span class="opt">leave blank → uses global default (florist storefront)</span>
           </label>
-          <input type="url" id="logo_file_url" name="logo_file_url"
-                 placeholder="https://...somewhere.com/logo.png">
-        </div>
-        <div class="field">
-          <label for="hero_file_url">
-            Hero image URL <span class="opt">leave blank → uses global default (florista)</span>
-          </label>
-          <input type="url" id="hero_file_url" name="hero_file_url"
-                 placeholder="https://...somewhere.com/hero.jpg">
-        </div>
-        <div class="field" style="font-size: 0.8rem; color: var(--muted); padding: 0.6rem; background: #fef3c7; border-radius: 8px; border: 1px solid #fde68a;">
-          ⚠️ The baseline workflow doesn't yet download files. These URLs will be sent in the payload but skipped until the logo/hero TODO branches are wired. Test with no logo + default hero for now.
+          <input type="file" id="hero_file" name="hero_file"
+                 accept="image/jpeg,image/jpg,image/png">
+          <div class="file-meta" id="hero_file_meta"></div>
         </div>
       </div>
 
@@ -395,6 +412,42 @@
       localStorage.setItem('partnerfunding_webhook_url', webhookInput.value);
     });
 
+    // ---------- File handling: read as base64 ----------
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+
+    function setupFileInput(fileInputId, metaId) {
+      const input = document.getElementById(fileInputId);
+      const meta = document.getElementById(metaId);
+      input.addEventListener('change', () => {
+        const f = input.files[0];
+        if (!f) { meta.textContent = ''; meta.classList.remove('error'); return; }
+        if (f.size > MAX_FILE_SIZE) {
+          meta.textContent = `❌ ${f.name} is ${(f.size / 1024).toFixed(0)} KB — max is 2048 KB`;
+          meta.classList.add('error');
+          input.value = '';
+          return;
+        }
+        meta.textContent = `✓ ${f.name} · ${(f.size / 1024).toFixed(1)} KB · ${f.type || 'unknown'}`;
+        meta.classList.remove('error');
+      });
+    }
+    setupFileInput('logo_file', 'logo_file_meta');
+    setupFileInput('hero_file', 'hero_file_meta');
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          // result is "data:image/png;base64,XXXX" — strip the prefix
+          const result = reader.result;
+          const comma = result.indexOf(',');
+          resolve({ base64: comma >= 0 ? result.slice(comma + 1) : result, mime: file.type, name: file.name });
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+
     // ---------- Submit handler ----------
     const form = document.getElementById('form');
     const responseEl = document.getElementById('response');
@@ -413,6 +466,30 @@
         return;
       }
 
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Reading files...';
+
+      // Read files as base64 if provided
+      let logo_payload = {};
+      let hero_payload = {};
+      try {
+        const logoFile = form.logo_file.files[0];
+        if (logoFile) {
+          const r = await fileToBase64(logoFile);
+          logo_payload = { logo_file_data: r.base64, logo_file_name: r.name, logo_file_mime: r.mime };
+        }
+        const heroFile = form.hero_file.files[0];
+        if (heroFile) {
+          const r = await fileToBase64(heroFile);
+          hero_payload = { hero_file_data: r.base64, hero_file_name: r.name, hero_file_mime: r.mime };
+        }
+      } catch (err) {
+        setResponse('error', `Failed to read file: ${err.message}`);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send to n8n webhook';
+        return;
+      }
+
       // Build payload (matches the shape validate.js expects in body)
       const payload = {
         mode: form.mode.value,
@@ -421,8 +498,8 @@
         color_primary: form.color_primary.value.trim(),
         color_secondary: form.color_secondary.value.trim(),
         widget_url: form.widget_url.value.trim(),
-        logo_file_url: form.logo_file_url.value.trim() || undefined,
-        hero_file_url: form.hero_file_url.value.trim() || undefined,
+        ...logo_payload,
+        ...hero_payload,
         embed_widget: form.embed_widget.checked,
         cobrand: form.cobrand.checked,
         utm_source: form.utm_source.value.trim() || undefined,
@@ -434,9 +511,12 @@
       // Strip undefineds for clean payload
       Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
 
-      submitBtn.disabled = true;
       submitBtn.textContent = 'Sending...';
-      setResponse('pending', 'Sending payload to n8n…\n\n' + JSON.stringify(payload, null, 2));
+      // For the response preview, hide the base64 data (too long); show only its length
+      const preview = { ...payload };
+      if (preview.logo_file_data) preview.logo_file_data = `<base64 ${preview.logo_file_data.length} chars>`;
+      if (preview.hero_file_data) preview.hero_file_data = `<base64 ${preview.hero_file_data.length} chars>`;
+      setResponse('pending', 'Sending payload to n8n…\n\n' + JSON.stringify(preview, null, 2));
 
       const start = Date.now();
       try {
