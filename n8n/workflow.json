@@ -135,7 +135,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "// === Process template: placeholder replace + IF blocks ===\n// See n8n/lib/process.js for authoritative version.\n\nconst data = $('Validate').first().json;\nconst templateB64 = $('Read Template').first().json.content;\nlet html = Buffer.from(templateB64, 'base64').toString('utf-8');\n\nconst replacements = {\n  PARTNER_NAME: data.partner_name,\n  LOGO_PATH: data.logo_path || '',\n  COLOR_PRIMARY: data.color_primary,\n  COLOR_SECONDARY: data.color_secondary,\n  WIDGET_URL: data.widget_url,\n  HERO_IMAGE_PATH: data.hero_image_path,\n  CTA_HREF: data.cta_href,\n};\n\nfor (const [k, v] of Object.entries(replacements)) {\n  html = html.split(`{{${k}}}`).join(v);\n}\n\nfunction processIf(html, flag, keep) {\n  const s = `<!--IF:${flag}-->`;\n  const e = `<!--/IF:${flag}-->`;\n  if (keep) return html.split(s).join('').split(e).join('');\n  const re = new RegExp(`<!--IF:${flag}-->[\\\\s\\\\S]*?<!--/IF:${flag}-->`, 'g');\n  return html.replace(re, '');\n}\n\nconst flags = {\n  logo: data.has_logo,\n  nologo: !data.has_logo,\n  embed: data.embed_widget,\n  loader: !data.embed_widget,\n  cobrand: data.cobrand,\n};\nfor (const [flag, keep] of Object.entries(flags)) {\n  html = processIf(html, flag, keep);\n}\n\nreturn [{ json: { ...data, processed_html: html } }];"
+        "jsCode": "// === Process template: placeholder replace + IF blocks ===\n// See n8n/lib/process.js for authoritative version.\n\nconst data = $('Validate').first().json;\nconst templateB64 = $('Read Template').first().json.content;\nlet html = Buffer.from(templateB64, 'base64').toString('utf-8');\n\nconst replacements = {\n  PARTNER_NAME: data.partner_name,\n  LOGO_PATH: data.logo_path || '',\n  COLOR_PRIMARY: data.color_primary,\n  COLOR_SECONDARY: data.color_secondary,\n  WIDGET_URL: data.widget_url,\n  HERO_IMAGE_PATH: data.hero_image_path,\n  CTA_HREF: data.cta_href,\n};\n\nfor (const [k, v] of Object.entries(replacements)) {\n  html = html.split(`{{${k}}}`).join(v);\n}\n\nfunction processIf(html, flag, keep) {\n  const s = `<!--IF:${flag}-->`;\n  const e = `<!--/IF:${flag}-->`;\n  if (keep) return html.split(s).join('').split(e).join('');\n  const re = new RegExp(`<!--IF:${flag}-->[\\\\s\\\\S]*?<!--/IF:${flag}-->`, 'g');\n  return html.replace(re, '');\n}\n\nconst flags = {\n  logo: data.has_logo,\n  nologo: !data.has_logo,\n  embed: data.embed_widget,\n  loader: !data.embed_widget,\n  cobrand: data.cobrand,\n};\nfor (const [flag, keep] of Object.entries(flags)) {\n  html = processIf(html, flag, keep);\n}\n\nconst processed_html_b64 = Buffer.from(html, 'utf-8').toString('base64');\nreturn [{ json: { ...data, processed_html: html, processed_html_b64 } }];"
       },
       "id": "a1111111-0000-0000-0000-000000000007",
       "name": "Process Template",
@@ -159,7 +159,7 @@
         },
         "sendBody": true,
         "contentType": "json",
-        "jsonBody": "={{ JSON.stringify({ message: ($json.mode === 'create' ? 'Add' : 'Update') + ' partner: ' + $json.slug, content: Buffer.from($json.processed_html, 'utf-8').toString('base64') }) }}"
+        "jsonBody": "{\n  \"message\": \"Add partner: {{ $('Validate').first().json.slug }}\",\n  \"content\": \"{{ $('Process Template').first().json.processed_html_b64 }}\"\n}"
       },
       "id": "a1111111-0000-0000-0000-000000000008",
       "name": "PUT index.html",
@@ -186,7 +186,7 @@
         },
         "sendBody": true,
         "contentType": "json",
-        "jsonBody": "={{ JSON.stringify({ message: 'Add styles for partner: ' + $('Validate').first().json.slug, content: $('Read Template CSS').first().json.content.replace(/\\n/g, '') }) }}"
+        "jsonBody": "{\n  \"message\": \"Add styles for partner: {{ $('Validate').first().json.slug }}\",\n  \"content\": \"{{ $('Read Template CSS').first().json.content.replace(/\\n/g, '') }}\"\n}"
       },
       "id": "a1111111-0000-0000-0000-000000000009",
       "name": "PUT styles.css",

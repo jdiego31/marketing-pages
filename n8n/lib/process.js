@@ -63,9 +63,14 @@ for (const [flag, keep] of Object.entries(flags)) {
 }
 
 // ---------- Output ----------
+// Pre-encode HTML as base64 here — Buffer works in the Code node sandbox
+// but may fail silently inside HTTP node expressions in some n8n versions.
+const processed_html_b64 = Buffer.from(html, 'utf-8').toString('base64');
+
 return {
   json: {
     ...data,
     processed_html: html,
+    processed_html_b64,
   },
 };
