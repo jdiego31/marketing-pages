@@ -388,10 +388,7 @@
     },
     "Mode OK?": {
       "main": [
-        [
-          { "node": "Read Template", "type": "main", "index": 0 },
-          { "node": "Read Template CSS", "type": "main", "index": 0 }
-        ],
+        [{ "node": "Read Template", "type": "main", "index": 0 }],
         [{ "node": "Respond Error", "type": "main", "index": 0 }]
       ]
     },
@@ -399,7 +396,7 @@
       "main": [[{ "node": "Slack Error", "type": "main", "index": 0 }]]
     },
     "Read Template": {
-      "main": [[{ "node": "Process Template", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Read Template CSS", "type": "main", "index": 0 }]]
     },
     "Read Template CSS": {
       "main": [[{ "node": "Process Template", "type": "main", "index": 0 }]]
