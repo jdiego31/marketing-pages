@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Partner Funding — Test Form</title>
+  <title>Marketing Generator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #1f4ed8;
@@ -25,29 +25,35 @@
       color: var(--text);
       background: var(--bg);
       line-height: 1.5;
-      padding: 2rem 1rem;
+      padding: 3rem 1rem;
+      min-height: 100vh;
     }
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-    }
-    h1 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+    .container { max-width: 640px; margin: 0 auto; }
+
+    .header { margin-bottom: 2.5rem; }
+    .header h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
       margin: 0 0 0.5rem;
+      line-height: 1.05;
     }
-    .subtitle {
+    .header h1 em {
+      color: var(--primary);
+      font-style: italic;
+    }
+    .header p {
       color: var(--muted);
-      font-size: 0.95rem;
-      margin: 0 0 2rem;
+      font-size: 1.05rem;
+      margin: 0;
     }
+
     .card {
       background: #fff;
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 1.75rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
       box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
     }
     .card h2 {
@@ -58,9 +64,7 @@
       color: var(--primary);
       margin: 0 0 1.25rem;
     }
-    .field {
-      margin-bottom: 1rem;
-    }
+    .field { margin-bottom: 1rem; }
     .field:last-child { margin-bottom: 0; }
     .field-row {
       display: grid;
@@ -80,9 +84,9 @@
       font-size: 0.78rem;
       margin-left: 0.3rem;
     }
-    input[type="text"], input[type="url"], select {
+    input[type="text"], input[type="url"] {
       width: 100%;
-      padding: 0.6rem 0.8rem;
+      padding: 0.65rem 0.85rem;
       border: 1px solid var(--border);
       border-radius: 8px;
       font-family: inherit;
@@ -91,7 +95,7 @@
       background: #fff;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    input[type="text"]:focus, input[type="url"]:focus, select:focus {
+    input[type="text"]:focus, input[type="url"]:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(31, 78, 216, 0.12);
@@ -114,27 +118,7 @@
       font-family: "JetBrains Mono", monospace;
     }
     .file-meta.error { color: var(--error); }
-    .checkbox-field {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.6rem;
-      padding: 0.6rem 0.8rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: border-color 0.15s ease;
-    }
-    .checkbox-field:hover { border-color: #c8cdd6; }
-    .checkbox-field input { margin-top: 0.15rem; }
-    .checkbox-field-content label {
-      margin: 0;
-      cursor: pointer;
-    }
-    .checkbox-field-content .hint {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-top: 0.15rem;
-    }
+
     .color-input {
       display: flex;
       gap: 0.5rem;
@@ -142,7 +126,7 @@
     }
     .color-input input[type="color"] {
       width: 44px;
-      height: 38px;
+      height: 40px;
       padding: 2px;
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -154,138 +138,298 @@
       font-family: "JetBrains Mono", monospace;
       font-size: 0.9rem;
     }
-    .mode-toggle {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .mode-toggle label {
-      margin: 0;
-      padding: 0.7rem 1rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.15s ease;
-    }
-    .mode-toggle input { display: none; }
-    .mode-toggle input:checked + label {
-      border-color: var(--primary);
-      background: color-mix(in srgb, var(--primary) 8%, #fff);
-      color: var(--primary);
-    }
+
     .submit {
       width: 100%;
-      padding: 0.95rem 1.5rem;
+      padding: 1rem 1.5rem;
+      margin-top: 0.5rem;
       background: var(--primary);
       color: #fff;
       border: 0;
       border-radius: 12px;
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 700;
+      letter-spacing: 0.01em;
       cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+      box-shadow: 0 6px 18px rgba(31, 78, 216, 0.22);
+    }
+    .submit:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(31, 78, 216, 0.3); }
+    .submit:active { transform: translateY(1px); }
+    .submit:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    /* ===================== Modal ===================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 16, 31, 0.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0s 0.3s linear;
+      z-index: 100;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.3s ease;
+    }
+    .modal-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 2.5rem 2.25rem;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 30px 80px rgba(15, 23, 42, 0.3), 0 8px 20px rgba(15, 23, 42, 0.1);
+      transform: scale(0.95) translateY(8px);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .modal-overlay.active .modal-card {
+      transform: scale(1) translateY(0);
+    }
+    .modal-card::before {
+      content: "";
+      position: absolute;
+      inset: -50% -20% auto auto;
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, color-mix(in srgb, var(--primary) 14%, transparent), transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .modal-stage {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .modal-stage[hidden] { display: none; }
+
+    /* Loading orb */
+    .orb {
+      width: 84px;
+      height: 84px;
+      position: relative;
+      margin-bottom: 1.75rem;
+    }
+    .orb-core {
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--primary) 95%, #fff), var(--primary));
+      box-shadow: 0 0 50px color-mix(in srgb, var(--primary) 50%, transparent);
+      animation: orb-pulse 1.8s ease-in-out infinite;
+    }
+    .orb-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--primary);
+      border-right-color: color-mix(in srgb, var(--primary) 55%, transparent);
+      animation: orb-spin 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    .orb-ring-outer {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1.5px dashed color-mix(in srgb, var(--primary) 30%, transparent);
+      animation: orb-spin 6s linear infinite reverse;
+    }
+    @keyframes orb-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.92; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+    @keyframes orb-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .orb-core, .orb-ring, .orb-ring-outer { animation: none; }
+    }
+
+    .modal-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.6rem;
+    }
+    .modal-status {
+      color: var(--muted);
+      margin: 0;
+      font-size: 0.95rem;
+      min-height: 1.3em;
+      transition: opacity 0.3s ease;
+    }
+    .modal-status.fade { opacity: 0; }
+
+    /* Success */
+    .success-check {
+      width: 76px;
+      height: 76px;
+      margin-bottom: 1.5rem;
+    }
+    .success-circle {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 2.5;
+      stroke-dasharray: 160;
+      stroke-dashoffset: 160;
+      animation: draw-circle 0.55s ease-out forwards;
+    }
+    .success-tick {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 40;
+      stroke-dashoffset: 40;
+      animation: draw-tick 0.4s 0.5s ease-out forwards;
+    }
+    @keyframes draw-circle { to { stroke-dashoffset: 0; } }
+    @keyframes draw-tick { to { stroke-dashoffset: 0; } }
+
+    .url-box {
+      display: flex;
+      align-items: stretch;
+      width: 100%;
+      margin: 1.5rem 0 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      animation: slide-up 0.4s 0.8s ease-out both;
+    }
+    .url-box input {
+      flex: 1;
+      border: 0;
+      padding: 0.85rem 1rem;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: transparent;
+      min-width: 0;
+    }
+    .url-box input:focus { outline: none; }
+    .url-box .copy-btn {
+      border: 0;
+      border-left: 1px solid var(--border);
+      background: #fafbfc;
+      padding: 0 1.1rem;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+    .url-box .copy-btn:hover { background: color-mix(in srgb, var(--primary) 8%, #fff); }
+    .url-box .copy-btn.copied { color: var(--success); }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      width: 100%;
+      margin-top: 1.5rem;
+      animation: slide-up 0.4s 1s ease-out both;
+    }
+    .modal-actions .btn {
+      flex: 1;
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      border: 0;
       font-family: inherit;
       transition: background 0.15s ease, transform 0.1s ease;
     }
-    .submit:hover { background: var(--primary-hover); }
-    .submit:active { transform: translateY(1px); }
-    .submit:disabled {
-      background: #94a3b8;
-      cursor: not-allowed;
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
     }
-    .response {
-      margin-top: 1.5rem;
-      padding: 1.25rem;
-      border-radius: 12px;
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--bg); color: var(--text); }
+
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Error state */
+    .error-icon {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--error) 12%, #fff);
+      color: var(--error);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    .modal-error-text {
       font-family: "JetBrains Mono", monospace;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      width: 100%;
+      margin: 0.5rem 0 0;
+      text-align: left;
+      max-height: 200px;
+      overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
-      display: none;
-    }
-    .response.show { display: block; }
-    .response.pending {
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
-      color: var(--muted);
-    }
-    .response.success {
-      background: #ecfdf5;
-      border: 1px solid #6ee7b7;
-      color: #065f46;
-    }
-    .response.error {
-      background: #fef2f2;
-      border: 1px solid #fca5a5;
-      color: #991b1b;
-    }
-    .hidden { display: none !important; }
-    code.inline {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.85em;
-      background: #f1f5f9;
-      padding: 0.1em 0.35em;
-      border-radius: 4px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Partner Funding — Test Form</h1>
-    <p class="subtitle">
-      Standalone tester for the n8n workflow. Use this until Slack is wired up.
-      Submits the same JSON payload your Slack form would.
-    </p>
+    <header class="header">
+      <h1>Marketing <em>Generator</em></h1>
+      <p>Spin up a new partner landing page in seconds.</p>
+    </header>
 
     <form id="form">
-
-      <!-- ===================== Config ===================== -->
+      <!-- ===================== Partner details ===================== -->
       <div class="card">
-        <h2>Config</h2>
-        <div class="field">
-          <label for="webhook_url">
-            n8n Webhook URL <span class="req">*</span>
-            <span class="opt">paste from your activated workflow's Webhook node</span>
-          </label>
-          <input type="url" id="webhook_url" name="webhook_url" required
-                 placeholder="https://your-n8n-host/webhook/partner-funding">
-        </div>
-      </div>
-
-      <!-- ===================== Mode ===================== -->
-      <div class="card">
-        <h2>Mode</h2>
-        <div class="mode-toggle">
-          <input type="radio" id="mode_create" name="mode" value="create" checked>
-          <label for="mode_create">Create new partner</label>
-          <input type="radio" id="mode_update" name="mode" value="update">
-          <label for="mode_update">Update existing partner</label>
-        </div>
-        <div class="field hidden" id="slug_field">
-          <label for="slug">Slug <span class="req">*</span> <span class="opt">existing slug to update — e.g., acme-co</span></label>
-          <input type="text" id="slug" name="slug" placeholder="acme-co">
-        </div>
-      </div>
-
-      <!-- ===================== Required fields ===================== -->
-      <div class="card">
-        <h2>Required</h2>
+        <h2>Partner details</h2>
         <div class="field">
           <label for="partner_name">Partner name <span class="req">*</span></label>
-          <input type="text" id="partner_name" name="partner_name" required placeholder="Acme Co">
+          <input type="text" id="partner_name" name="partner_name" required placeholder="Acme Co" autocomplete="off">
         </div>
         <div class="field-row">
           <div class="field">
-            <label for="color_primary">Primary color (hex) <span class="req">*</span></label>
+            <label for="color_primary">Primary color <span class="req">*</span></label>
             <div class="color-input">
               <input type="color" id="color_primary_picker" value="#1f4ed8">
               <input type="text" id="color_primary" name="color_primary" required value="#1f4ed8" pattern="^#[0-9A-Fa-f]{6}$">
             </div>
           </div>
           <div class="field">
-            <label for="color_secondary">Secondary color (hex) <span class="req">*</span></label>
+            <label for="color_secondary">Secondary color <span class="req">*</span></label>
             <div class="color-input">
               <input type="color" id="color_secondary_picker" value="#0ea5e9">
               <input type="text" id="color_secondary" name="color_secondary" required value="#0ea5e9" pattern="^#[0-9A-Fa-f]{6}$">
@@ -293,107 +437,121 @@
           </div>
         </div>
         <div class="field">
-          <label for="widget_url">Widget URL <span class="req">*</span> <span class="opt">Lendflow iw.lendflow.com URL</span></label>
+          <label for="widget_url">Widget URL <span class="req">*</span> <span class="opt">Lendflow iw.lendflow.com link</span></label>
           <input type="url" id="widget_url" name="widget_url" required placeholder="https://iw.lendflow.com/?env=...">
         </div>
+      </div>
+
+      <!-- ===================== Brand assets ===================== -->
+      <div class="card">
+        <h2>Brand assets</h2>
         <div class="field">
-          <label for="logo_file">
-            Logo file <span class="req">*</span> <span class="opt">PNG, SVG, JPG · max 2MB</span>
-          </label>
+          <label for="logo_file">Logo <span class="req">*</span> <span class="opt">PNG, SVG, JPG · max 2MB</span></label>
           <input type="file" id="logo_file" name="logo_file" required
                  accept="image/png,image/svg+xml,image/jpeg,image/jpg">
           <div class="file-meta" id="logo_file_meta"></div>
         </div>
-      </div>
-
-      <!-- ===================== Files (optional) ===================== -->
-      <div class="card">
-        <h2>Hero image (optional)</h2>
         <div class="field">
-          <label for="hero_file">
-            Hero image file <span class="opt">leave blank → uses global default (florist storefront)</span>
-          </label>
+          <label for="hero_file">Hero image <span class="opt">leave blank → uses default · JPG, PNG · max 2MB</span></label>
           <input type="file" id="hero_file" name="hero_file"
                  accept="image/jpeg,image/jpg,image/png">
           <div class="file-meta" id="hero_file_meta"></div>
         </div>
       </div>
 
-      <!-- ===================== Flags ===================== -->
-      <div class="card">
-        <h2>Flags (optional)</h2>
-        <div class="field">
-          <div class="checkbox-field">
-            <input type="checkbox" id="embed_widget" name="embed_widget">
-            <div class="checkbox-field-content">
-              <label for="embed_widget">Embed widget inline</label>
-              <div class="hint">If unchecked (default), CTA opens widget on-page via lendflow-loader.js</div>
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <div class="checkbox-field">
-            <input type="checkbox" id="cobrand" name="cobrand">
-            <div class="checkbox-field-content">
-              <label for="cobrand">Co-brand with Lendflow</label>
-              <div class="hint">Adds "Funding powered by Lendflow" line in footer</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===================== UTM ===================== -->
-      <div class="card">
-        <h2>UTM tracking (optional)</h2>
-        <div class="field-row">
-          <div class="field">
-            <label for="utm_source">utm_source</label>
-            <input type="text" id="utm_source" name="utm_source" placeholder="email">
-          </div>
-          <div class="field">
-            <label for="utm_medium">utm_medium</label>
-            <input type="text" id="utm_medium" name="utm_medium" placeholder="newsletter">
-          </div>
-        </div>
-        <div class="field">
-          <label for="utm_campaign">utm_campaign</label>
-          <input type="text" id="utm_campaign" name="utm_campaign" placeholder="spring2026">
-        </div>
-      </div>
-
-      <!-- ===================== Requester (Slack stub) ===================== -->
-      <div class="card">
-        <h2>Slack requester (optional)</h2>
-        <div class="field">
-          <label for="requester_slack_id">
-            Slack user ID <span class="opt">e.g., U01ABCD — leave blank in tests if Slack DM is disabled</span>
-          </label>
-          <input type="text" id="requester_slack_id" name="requester_slack_id" placeholder="U01ABCD">
-        </div>
-      </div>
-
-      <button type="submit" class="submit" id="submitBtn">Send to n8n webhook</button>
-
-      <div id="response" class="response"></div>
+      <button type="submit" class="submit" id="submitBtn">Generate</button>
     </form>
   </div>
 
+  <!-- ===================== Modal ===================== -->
+  <div class="modal-overlay" id="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+      <!-- Loading stage -->
+      <div class="modal-stage" id="stage-loading">
+        <div class="orb" aria-hidden="true">
+          <div class="orb-ring-outer"></div>
+          <div class="orb-ring"></div>
+          <div class="orb-core"></div>
+        </div>
+        <h2 class="modal-title" id="modal-title">Generating your page</h2>
+        <p class="modal-status" id="modal-status">Validating inputs…</p>
+      </div>
+
+      <!-- Success stage -->
+      <div class="modal-stage" id="stage-success" hidden>
+        <svg class="success-check" viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="success-circle" cx="26" cy="26" r="25"/>
+          <path class="success-tick" d="M15 27 L23 35 L38 18"/>
+        </svg>
+        <h2 class="modal-title">Your page is live</h2>
+        <p class="modal-status">Share this link with the partner.</p>
+        <div class="url-box">
+          <input type="text" id="result-url" readonly>
+          <button type="button" class="copy-btn" id="copy-btn">Copy</button>
+        </div>
+        <div class="modal-actions">
+          <a class="btn btn-primary" id="open-btn" target="_blank" rel="noopener noreferrer">Open page →</a>
+          <button type="button" class="btn btn-secondary" id="close-btn">Generate another</button>
+        </div>
+      </div>
+
+      <!-- Error stage -->
+      <div class="modal-stage" id="stage-error" hidden>
+        <div class="error-icon" aria-hidden="true">!</div>
+        <h2 class="modal-title">Something went wrong</h2>
+        <p class="modal-status">We couldn't generate the page.</p>
+        <div class="modal-error-text" id="modal-error-text"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary" id="retry-btn">Try again</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <script>
-    // ---------- Mode toggle ----------
-    const slugField = document.getElementById('slug_field');
-    document.querySelectorAll('input[name="mode"]').forEach((r) => {
-      r.addEventListener('change', () => {
-        if (r.value === 'update' && r.checked) {
-          slugField.classList.remove('hidden');
-          document.getElementById('slug').required = true;
-        } else if (r.value === 'create' && r.checked) {
-          slugField.classList.add('hidden');
-          document.getElementById('slug').required = false;
-        }
+    // ============================================================
+    // Config — webhook URL hardcoded (production)
+    // ============================================================
+    const WEBHOOK_URL = 'https://automation.lendflow.com/webhook/partner-funding';
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+
+    // ============================================================
+    // Helpers
+    // ============================================================
+    function titleCase(s) {
+      return s.trim().split(/\s+/).map((w) =>
+        w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+      ).join(' ');
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result;
+          const comma = result.indexOf(',');
+          resolve({ base64: comma >= 0 ? result.slice(comma + 1) : result, mime: file.type, name: file.name });
+        };
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
       });
+    }
+
+    // ============================================================
+    // Partner name title-case on blur
+    // ============================================================
+    const partnerNameInput = document.getElementById('partner_name');
+    partnerNameInput.addEventListener('blur', () => {
+      if (partnerNameInput.value.trim()) {
+        partnerNameInput.value = titleCase(partnerNameInput.value);
+      }
     });
 
-    // ---------- Color picker ↔ hex text sync ----------
+    // ============================================================
+    // Color picker sync
+    // ============================================================
     function syncColor(pickerId, textId) {
       const picker = document.getElementById(pickerId);
       const text = document.getElementById(textId);
@@ -405,16 +563,9 @@
     syncColor('color_primary_picker', 'color_primary');
     syncColor('color_secondary_picker', 'color_secondary');
 
-    // ---------- Persist webhook URL in localStorage ----------
-    const webhookInput = document.getElementById('webhook_url');
-    webhookInput.value = localStorage.getItem('partnerfunding_webhook_url') || '';
-    webhookInput.addEventListener('change', () => {
-      localStorage.setItem('partnerfunding_webhook_url', webhookInput.value);
-    });
-
-    // ---------- File handling: read as base64 ----------
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
-
+    // ============================================================
+    // File input meta (size, name)
+    // ============================================================
     function setupFileInput(fileInputId, metaId) {
       const input = document.getElementById(fileInputId);
       const meta = document.getElementById(metaId);
@@ -427,49 +578,111 @@
           input.value = '';
           return;
         }
-        meta.textContent = `✓ ${f.name} · ${(f.size / 1024).toFixed(1)} KB · ${f.type || 'unknown'}`;
+        meta.textContent = `✓ ${f.name} · ${(f.size / 1024).toFixed(1)} KB`;
         meta.classList.remove('error');
       });
     }
     setupFileInput('logo_file', 'logo_file_meta');
     setupFileInput('hero_file', 'hero_file_meta');
 
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          // result is "data:image/png;base64,XXXX" — strip the prefix
-          const result = reader.result;
-          const comma = result.indexOf(',');
-          resolve({ base64: comma >= 0 ? result.slice(comma + 1) : result, mime: file.type, name: file.name });
-        };
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
+    // ============================================================
+    // Modal management
+    // ============================================================
+    const modal = document.getElementById('modal');
+    const stages = {
+      loading: document.getElementById('stage-loading'),
+      success: document.getElementById('stage-success'),
+      error: document.getElementById('stage-error'),
+    };
+    const statusEl = document.getElementById('modal-status');
+    const errorTextEl = document.getElementById('modal-error-text');
+    const resultUrlEl = document.getElementById('result-url');
+    const openBtn = document.getElementById('open-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const closeBtn = document.getElementById('close-btn');
+    const retryBtn = document.getElementById('retry-btn');
+
+    function showStage(name) {
+      Object.entries(stages).forEach(([key, el]) => { el.hidden = key !== name; });
+    }
+    function openModal(stage = 'loading') {
+      showStage(stage);
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    function closeModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
     }
 
-    // ---------- Submit handler ----------
+    // Rotating status messages while loading
+    const STATUS_MESSAGES = [
+      'Validating inputs…',
+      'Generating the partner page…',
+      'Committing to repository…',
+      'Deploying to production…',
+      'Verifying live URL…',
+      'Almost there…',
+    ];
+    let statusInterval = null;
+    function startStatusRotation() {
+      let i = 0;
+      statusEl.textContent = STATUS_MESSAGES[0];
+      statusInterval = setInterval(() => {
+        i = (i + 1) % STATUS_MESSAGES.length;
+        statusEl.classList.add('fade');
+        setTimeout(() => {
+          statusEl.textContent = STATUS_MESSAGES[i];
+          statusEl.classList.remove('fade');
+        }, 250);
+      }, 5500);
+    }
+    function stopStatusRotation() {
+      if (statusInterval) { clearInterval(statusInterval); statusInterval = null; }
+    }
+
+    // ============================================================
+    // Modal actions
+    // ============================================================
+    closeBtn.addEventListener('click', closeModal);
+    retryBtn.addEventListener('click', closeModal);
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(resultUrlEl.value);
+        copyBtn.textContent = 'Copied ✓';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        resultUrlEl.select();
+        document.execCommand('copy');
+      }
+    });
+
+    // Close on ESC (only when not in loading state)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active') && stages.loading.hidden) {
+        closeModal();
+      }
+    });
+
+    // ============================================================
+    // Submit
+    // ============================================================
     const form = document.getElementById('form');
-    const responseEl = document.getElementById('response');
     const submitBtn = document.getElementById('submitBtn');
-
-    function setResponse(state, content) {
-      responseEl.className = `response show ${state}`;
-      responseEl.textContent = content;
-    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const webhookUrl = webhookInput.value.trim();
-      if (!webhookUrl) {
-        setResponse('error', 'Webhook URL is required.');
-        return;
-      }
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Reading files...';
+      // Title-case the partner name before sending
+      const partnerName = titleCase(partnerNameInput.value);
+      partnerNameInput.value = partnerName;
 
-      // Read files as base64 if provided
+      // Read files
       let logo_payload = {};
       let hero_payload = {};
       try {
@@ -484,72 +697,56 @@
           hero_payload = { hero_file_data: r.base64, hero_file_name: r.name, hero_file_mime: r.mime };
         }
       } catch (err) {
-        setResponse('error', `Failed to read file: ${err.message}`);
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Send to n8n webhook';
+        openModal('error');
+        errorTextEl.textContent = `Failed to read file: ${err.message}`;
         return;
       }
 
-      // Build payload (matches the shape validate.js expects in body)
+      // Build payload — hidden defaults baked in
       const payload = {
-        mode: form.mode.value,
-        slug: form.slug.value.trim() || undefined,
-        partner_name: form.partner_name.value.trim(),
+        mode: 'create',
+        partner_name: partnerName,
         color_primary: form.color_primary.value.trim(),
         color_secondary: form.color_secondary.value.trim(),
         widget_url: form.widget_url.value.trim(),
         ...logo_payload,
         ...hero_payload,
-        embed_widget: form.embed_widget.checked,
-        cobrand: form.cobrand.checked,
-        utm_source: form.utm_source.value.trim() || undefined,
-        utm_medium: form.utm_medium.value.trim() || undefined,
-        utm_campaign: form.utm_campaign.value.trim() || undefined,
-        requester_slack_id: form.requester_slack_id.value.trim() || undefined,
+        embed_widget: false,
+        cobrand: false,
       };
 
-      // Strip undefineds for clean payload
-      Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+      // Show modal in loading state
+      submitBtn.disabled = true;
+      openModal('loading');
+      startStatusRotation();
 
-      submitBtn.textContent = 'Sending...';
-      // For the response preview, hide the base64 data (too long); show only its length
-      const preview = { ...payload };
-      if (preview.logo_file_data) preview.logo_file_data = `<base64 ${preview.logo_file_data.length} chars>`;
-      if (preview.hero_file_data) preview.hero_file_data = `<base64 ${preview.hero_file_data.length} chars>`;
-      setResponse('pending', 'Sending payload to n8n…\n\n' + JSON.stringify(preview, null, 2));
-
-      const start = Date.now();
       try {
-        // No Content-Type header → browser sends text/plain → no CORS preflight.
-        // The Validate code node parses the string body as JSON.
-        const res = await fetch(webhookUrl, {
+        const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           body: JSON.stringify(payload),
         });
-        const elapsed = ((Date.now() - start) / 1000).toFixed(1);
         const text = await res.text();
         let body;
         try { body = JSON.parse(text); } catch (_) { body = text; }
 
-        if (res.ok) {
-          setResponse(
-            'success',
-            `✅ HTTP ${res.status} in ${elapsed}s\n\n` +
-            (typeof body === 'string' ? body : JSON.stringify(body, null, 2))
-          );
+        stopStatusRotation();
+
+        if (res.ok && body && typeof body === 'object' && body.url) {
+          // Success
+          resultUrlEl.value = body.url;
+          openBtn.href = body.url;
+          showStage('success');
         } else {
-          setResponse(
-            'error',
-            `❌ HTTP ${res.status} in ${elapsed}s\n\n` +
-            (typeof body === 'string' ? body : JSON.stringify(body, null, 2))
-          );
+          // Error
+          errorTextEl.textContent = `HTTP ${res.status}\n\n` + (typeof body === 'string' ? body : JSON.stringify(body, null, 2));
+          showStage('error');
         }
       } catch (err) {
-        const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-        setResponse('error', `❌ Network error after ${elapsed}s\n\n${err.message}`);
+        stopStatusRotation();
+        errorTextEl.textContent = `Network error\n\n${err.message}`;
+        showStage('error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Send to n8n webhook';
       }
     });
   </script>

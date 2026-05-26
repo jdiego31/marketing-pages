@@ -34,7 +34,15 @@ if (!payload.logo_file_data && !payload.logo_file_url) {
   throw new Error('Logo is required: provide either logo_file_data (base64) or logo_file_url.');
 }
 
-const { mode, partner_name, color_primary, color_secondary, widget_url } = payload;
+const { mode, color_primary, color_secondary, widget_url } = payload;
+
+// Apply Title Case to partner_name for display ("acme co" → "Acme Co")
+function titleCase(s) {
+  return String(s).trim().split(/\s+/).map((w) =>
+    w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  ).join(' ');
+}
+const partner_name = titleCase(payload.partner_name);
 
 // ---------- Mode ----------
 if (!['create', 'update'].includes(mode)) {
@@ -60,10 +68,14 @@ function toSlug(s) {
     .replace(/^-+|-+$/g, '');
 }
 
+const SLUG_SUFFIX = '-capital-marketing';
+
 let slug;
 if (mode === 'create') {
-  slug = toSlug(partner_name);
-  if (!slug) throw new Error(`Cannot derive slug from partner_name '${partner_name}'.`);
+  const base = toSlug(partner_name);
+  if (!base) throw new Error(`Cannot derive slug from partner_name '${partner_name}'.`);
+  // Append marketing suffix unless user already typed it in
+  slug = base.endsWith(SLUG_SUFFIX) ? base : base + SLUG_SUFFIX;
 } else {
   if (!payload.slug) throw new Error("In 'update' mode, the slug field is required.");
   slug = payload.slug;
