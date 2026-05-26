@@ -77,7 +77,7 @@ let widgetUrl;
 try {
   widgetUrl = new URL(widget_url);
 } catch (e) {
-  throw new Error(`Invalid widget_url '${widget_url}'.`);
+  throw new Error(`Invalid widget_url. Value: ${JSON.stringify(widget_url)} (type: ${typeof widget_url}). URL parse error: ${e.message}`);
 }
 
 // Append UTMs only if provided
