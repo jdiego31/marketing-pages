@@ -267,7 +267,7 @@
         },
         "sendBody": true,
         "contentType": "json",
-        "jsonBody": "={{ JSON.stringify({ name: 'partnerfunding', project: 'prj_KFGLlB9oaQgyXV6oRAUjWeAkdqmt', target: 'production', files: $json.files, projectSettings: { framework: null } }) }}"
+        "jsonBody": "{\n  \"name\": \"partnerfunding\",\n  \"project\": \"prj_KFGLlB9oaQgyXV6oRAUjWeAkdqmt\",\n  \"target\": \"production\",\n  \"files\": {{ JSON.stringify($json.files) }},\n  \"projectSettings\": { \"framework\": null }\n}"
       },
       "id": "a1111111-0000-0000-0000-00000000000D",
       "name": "Deploy to Vercel",
