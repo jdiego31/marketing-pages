@@ -40,51 +40,65 @@ const files = [];
 for (const item of items) {
   if (!item.binary || typeof item.binary !== 'object') continue;
 
-  // Iterate ALL binary properties on the item.
-  //   Newer n8n: one item with many binary keys (file_0, file_1, ...)
-  //   Older n8n: multiple items, each with one binary key (data)
+  // Iterate ALL binary properties on the item — handles both n8n output formats
+  // (single item with many binaries, or multiple items each with one).
   for (const [propName, bin] of Object.entries(item.binary)) {
     if (!bin || typeof bin !== 'object') continue;
+    if (!bin.data) continue;
 
-    const fileName = bin.fileName || bin.name;
-    if (!fileName) continue;
+    // Build the full file path within the repo. n8n's Compression node exposes
+    // the path differently across versions:
+    //   - bin.fileName with full path     → use as-is
+    //   - bin.fileName basename + bin.directory  → concat
+    //   - bin.fileName basename only      → root-level
+    let fullPath = '';
+    if (bin.fileName && bin.fileName.includes('/')) {
+      fullPath = bin.fileName;
+    } else if (bin.directory) {
+      const dir = bin.directory.replace(/^\/+|\/+$/g, '');
+      fullPath = (dir ? dir + '/' : '') + (bin.fileName || '');
+    } else if (bin.fileName) {
+      fullPath = bin.fileName;
+    } else {
+      continue;
+    }
 
-    // GitHub zipball wraps in "jdiego31-marketing-pages-abc1234/"
-    const stripped = fileName.replace(/^[^/]+\//, '');
-    if (!stripped || stripped.endsWith('/')) continue;
+    // Strip GitHub zipball wrapper ("owner-repo-shortsha/")
+    fullPath = fullPath.replace(/^[^/]+-[a-f0-9]{7,}\//, '');
 
-    if (EXCLUDE.some((re) => re.test(stripped))) continue;
-
-    const data = bin.data;
-    if (!data) continue;
+    if (!fullPath || fullPath.endsWith('/')) continue;
+    if (EXCLUDE.some((re) => re.test(fullPath))) continue;
 
     files.push({
-      file: stripped,
-      data,
+      file: fullPath,
+      data: bin.data,
       encoding: 'base64',
     });
   }
 }
 
+// Detect duplicates — if any, the path extraction is wrong for this n8n version
+const pathCounts = {};
+for (const f of files) pathCounts[f.file] = (pathCounts[f.file] || 0) + 1;
+const dupes = Object.entries(pathCounts).filter(([, c]) => c > 1).map(([p]) => p);
+if (dupes.length > 0) {
+  const sample = items[0]?.binary ? (() => {
+    const k = Object.keys(items[0].binary)[0];
+    const b = items[0].binary[k];
+    return b ? { propName: k, fileName: b.fileName, directory: b.directory, hasData: !!b.data } : null;
+  })() : null;
+  throw new Error('Duplicate paths: ' + dupes.join(', ') + '. Sample binary: ' + JSON.stringify(sample));
+}
+
 if (files.length === 0) {
-  // Debug aid: dump what we received so we can adjust
-  const debug = items.map((it, i) => ({
-    index: i,
-    json_keys: Object.keys(it.json || {}),
-    binary_keys: Object.keys(it.binary || {}),
-    first_binary_sample: it.binary ? (() => {
-      const k = Object.keys(it.binary)[0];
-      const b = k ? it.binary[k] : null;
-      return b ? { propName: k, fileName: b.fileName, hasData: !!b.data, mimeType: b.mimeType } : null;
-    })() : null,
-  }));
-  throw new Error('No files to deploy. Debug: ' + JSON.stringify(debug));
+  throw new Error('No files to deploy after filtering.');
 }
 
 return [{
   json: {
     files,
     file_count: files.length,
+    sample_paths: files.slice(0, 10).map((f) => f.file),
     slug,
     partner_name: $('Validate').first().json.partner_name,
     requester_slack_id: $('Validate').first().json.requester_slack_id,
