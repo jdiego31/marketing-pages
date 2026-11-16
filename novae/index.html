@@ -277,6 +277,31 @@
 
   
   <script src="https://iw.lendflow.com/js/lendflow-loader.js"></script>
+  <script>
+    // Open the application on the visitor's first real interaction, not on page load.
+    // Email security scanners load the page without moving the mouse, tapping or typing,
+    // so they no longer start an application (see IS-4541).
+    (function () {
+      var events = ["pointermove", "pointerdown", "touchstart", "wheel", "keydown"];
+      var done = false;
+      function stop() {
+        done = true;
+        events.forEach(function (name) { window.removeEventListener(name, onFirstInteraction, true); });
+      }
+      function onFirstInteraction(e) {
+        if (done || !e.isTrusted) return;
+        // If the visitor is already pressing an Apply button, let that click open the widget.
+        var target = e.target && e.target.closest ? e.target : null;
+        if (target && target.closest('a[href*="env="], [data-href*="env="]')) return stop();
+        stop();
+        var cta = document.querySelector('a.btn-primary[href*="env="]') || document.querySelector('a[href*="env="]');
+        if (cta) cta.click();
+      }
+      events.forEach(function (name) {
+        window.addEventListener(name, onFirstInteraction, { capture: true, passive: true });
+      });
+    })();
+  </script>
   
 
 </body>
